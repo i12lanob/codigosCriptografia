@@ -176,6 +176,7 @@ def InvModMatrix(A, n):
 ########################### Ejercicio 2 ###########################
 # Función TextToNumber. Convierte una cadena de texto a una cadena numérica en Z26, eliminando espacios y caracteres especiales.
 def TextToNumber(texto):
+    
     texto = texto.upper()  # Convertir el texto a mayúsculas para facilitar el mapeo
     cadena_numerica = []
     
