@@ -13,11 +13,21 @@ import re
 
 #Función ascii2letter
 
+def ascii2letter(letra):   
+    # Convertimos el código ASCII a la letra que 
+    letra = chr(letra)
+    
+    # Mostramos el resultado
+    return letra
+
+
+
+ascii2letter()
 ########################### Ejercicio 2 ###########################
 #Función knapsack.
 
 #Función knapsacksol.
-gggg
+
 #Función knapsackcipher.
 
 #Función knapsackdecipher.
