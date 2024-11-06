@@ -17,7 +17,7 @@ import re
 #Función knapsack.
 
 #Función knapsacksol.
-
+gggg
 #Función knapsackcipher.
 
 #Función knapsackdecipher.
