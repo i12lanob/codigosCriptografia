@@ -205,6 +205,13 @@ def afinCypher(texto, k, d):
     
     return texto_cifrado
 
+########################### Ejercicio 4 ###########################
+def encriptarCifradoHill(texto, matriz):
+    print("H") 
+
+def desencriptarCifradoHill(texto, matriz):
+    print("H") 
+
 ############################## Menú ###############################
 #Aqui inicia el programa, primero pido que elija una opcion
 print("1. Algoritmo de euclides")
@@ -213,6 +220,7 @@ print("3. Elementos invertibles")
 print("4. Inversa modular matriz")
 print("5. Caracteres a cadena numerica Z26")
 print("6. Programa cifrado afin")
+print("7. Cifrado Hill")
 op=input("Elige una de las opciones: ")
 
 op=int(op)
@@ -256,3 +264,13 @@ if op==6:
     d = obtener_numero_entero("Introduce el valor de d: ")
 
     print(f"El texto cifrado usando el cifrado afín es: {afinCypher(texto, k, d)}")
+
+if op==7: 
+    texto = input("Introduce el texto llano para cifrar con el cifrado Hill: ")
+    #dimension = obtener_numero_entero("Introduce el valor de la dimension de la matriz: ")
+    dimension=3
+    matriz = generarMatriz(dimension)
+    encriptado=encriptarCifradoHill(texto, matriz)
+
+    print("El texto en cifrado Hill es: ", encriptado)
+    print("El texto en cifrado Hill es: ", desencriptarCifradoHill(encriptado, matriz))
