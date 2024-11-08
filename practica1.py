@@ -106,6 +106,23 @@ def matrizAdjunta(A):
 
     return adjunta
 
+def calcularModulo(texto_cifrado, n):
+
+    texto_modulo = []
+
+    for i in range(len(texto_cifrado)):
+        texto_modulo.append(texto_cifrado[i]%n)
+
+    return texto_modulo
+
+def NumberToText(texto):
+    cadena_texto = []
+
+    for num in texto:
+            numero = num + ord('A') # Convertir a un número en Z26 (A=0, ..., Z=25)
+            cadena_texto.append(numero)
+    
+    return cadena_texto
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -229,12 +246,29 @@ def encriptarCifradoHill(texto, matriz):
                 
             texto_cifrado.append(aux)
 
+        texto_cifrado = calcularModulo(texto_cifrado, n)
+
     return texto_cifrado
-            
 
+def desencriptarCifradoHill(mensajeEncriptado, matriz):
+    n = 26
+    matriz_inversa = InvModMatrix(matriz, n) 
 
-def desencriptarCifradoHill(texto, matriz):
-    print("H") 
+    texto_descifrado = []
+
+    for fila in range(len(matriz)): 
+        f = 0
+        aux = 0
+        for colum in range(len(matriz_inversa)): 
+            aux += matriz_inversa[fila][colum] * mensajeEncriptado[f]
+            f += 1
+                
+        texto_descifrado.append(aux)
+
+    texto_descifrado = calcularModulo(texto_descifrado, n)
+
+    texto_descifrado = NumberToText(texto_descifrado)
+    return texto_descifrado    
 
 ############################## Menú ###############################
 #Aqui inicia el programa, primero pido que elija una opcion
@@ -298,4 +332,4 @@ if op==7:
     encriptado=encriptarCifradoHill(texto, matriz)
 
     print("El texto en cifrado Hill es: ", encriptado)
-    print("El texto en cifrado Hill es: ", desencriptarCifradoHill(encriptado, matriz))
+    print("El texto en descifrado Hill es: ", desencriptarCifradoHill(encriptado, matriz))
