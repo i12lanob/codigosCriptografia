@@ -56,6 +56,12 @@ def calculoDeterminante(A):
 
     return det
 
+def comprobarCalculoInversa(n, det): 
+    if algeucl(n, det)==1: 
+        return 1
+    else:  
+        print("El determinante y ", n, " no son coprimos, no se puede calcular la inversa")
+
 #Función matrizTraspuesta
 def matrizTraspuesta(A):
 
@@ -145,9 +151,9 @@ def InvModMatrix(A, n):
 
     # Calcular determinante de la matriz A
     det = calculoDeterminante(A)
-
+    
     # Si el mcd==1 del determinante y de n entonces se puede calcular la inversa modular
-    if algeucl(det, n) == 1:
+    if comprobarCalculoInversa(n, det) == 1:
 
         det = det % n #si el determinante es negativo nos aseguramos que está dentro del módulo
 
@@ -169,9 +175,6 @@ def InvModMatrix(A, n):
         for fila in inversa_modular:
             print(fila)
         return inversa_modular
-    
-    else: 
-        print("El determinante y ", n, " no son coprimos, no se puede calcular la inversa")
 
 ########################### Ejercicio 2 ###########################
 # Función TextToNumber. Convierte una cadena de texto a una cadena numérica en Z26, eliminando espacios y caracteres especiales.
@@ -207,7 +210,28 @@ def afinCypher(texto, k, d):
 
 ########################### Ejercicio 4 ###########################
 def encriptarCifradoHill(texto, matriz):
-    print("H") 
+    n = 26
+    aux = 0
+    det = calculoDeterminante(matriz)
+
+    if comprobarCalculoInversa(n, det)==1: 
+        vector_texto = []
+        texto_cifrado = []
+
+        vector_texto = TextToNumber(texto)
+
+        for fila in range(len(matriz)): 
+            f = 0
+            aux = 0
+            for colum in range(len(matriz)): 
+                aux += matriz[fila][colum] * vector_texto[f]
+                f += 1
+                
+            texto_cifrado.append(aux)
+
+    return texto_cifrado
+            
+
 
 def desencriptarCifradoHill(texto, matriz):
     print("H") 
@@ -269,7 +293,8 @@ if op==7:
     texto = input("Introduce el texto llano para cifrar con el cifrado Hill: ")
     #dimension = obtener_numero_entero("Introduce el valor de la dimension de la matriz: ")
     dimension=3
-    matriz = generarMatriz(dimension)
+    #matriz = generarMatriz(dimension)
+    matriz = [ [ 6, 24, 1 ], [ 13, 16, 10 ], [ 20, 17, 15 ] ]
     encriptado=encriptarCifradoHill(texto, matriz)
 
     print("El texto en cifrado Hill es: ", encriptado)
