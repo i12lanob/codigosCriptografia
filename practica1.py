@@ -56,6 +56,13 @@ def calculoDeterminante(A):
 
     return det
 
+#Función comprobarCalculoInversa. Comprobar si se puede calcular la inversa modular de una matriz. 
+def comprobarCalculoInversa(n, det): 
+    if algeucl(n, det)==1: 
+        return 1
+    else:  
+        print("El determinante y", n, "no son coprimos, no se puede calcular la inversa")
+
 #Función matrizTraspuesta
 def matrizTraspuesta(A):
 
@@ -99,6 +106,26 @@ def matrizAdjunta(A):
         adjunta.append(fila_adjunta)
 
     return adjunta
+
+#Función calcularModulo. 
+def calcularModulo(texto_cifrado, n):
+
+    texto_modulo = []
+
+    for i in range(len(texto_cifrado)):
+        texto_modulo.append(texto_cifrado[i]%n)
+
+    return texto_modulo
+
+#Función NumberToText. Convertir número a carácter.  
+def NumberToText(texto):
+    cadena_texto = []
+
+    for num in texto:
+            numero = chr(num + ord('A')) # Convertir a un número en Z26 (A=0, ..., Z=25)
+            cadena_texto.append(numero)
+    
+    return cadena_texto
 
 ###################################################################
 #Funciones principales                                            #
@@ -145,11 +172,11 @@ def InvModMatrix(A, n):
 
     # Calcular determinante de la matriz A
     det = calculoDeterminante(A)
-
+    
     # Si el mcd==1 del determinante y de n entonces se puede calcular la inversa modular
-    if algeucl(det, n) == 1:
+    if comprobarCalculoInversa(n, det) == 1:
 
-        det = det % n #si el determinante es negativo nos aseguramos que está dentro del módulo
+        det = det % n # Si el determinante es negativo nos aseguramos que está dentro del módulo
 
         det_inv = invmod(det, n) # Calcular determinante inverso
 
@@ -169,9 +196,6 @@ def InvModMatrix(A, n):
         for fila in inversa_modular:
             print(fila)
         return inversa_modular
-    
-    else: 
-        print("El determinante y ", n, " no son coprimos, no se puede calcular la inversa")
 
 ########################### Ejercicio 2 ###########################
 # Función TextToNumber. Convierte una cadena de texto a una cadena numérica en Z26, eliminando espacios y caracteres especiales.
@@ -201,9 +225,120 @@ def afinCypher(texto, k, d):
     cifrado = [(k * x + d) % 26 for x in numeros]
     
     # Convertir los números cifrados de vuelta a letras
-    texto_cifrado = ''.join(chr(num + ord('A')) for num in cifrado) # chr convierte ASCII en su carácter
+    texto_cifrado = ''.join(chr(num + ord('A')) for num in cifrado) # chr convierte en su carácter
     
     return texto_cifrado
+
+def afinDecrypher(texto_cifrado, k, d):
+    """Descifra el texto cifrado usando el descifrado afín con los valores k y d."""
+    # Validar que k y 26 sean coprimos
+    if algeucl(k, 26) != 1:
+        return "El valor de k no es coprimo con 26, elige otro valor para k."
+    
+    # Calcular el inverso de k en Z26
+    k_inv = invmod(k, 26)
+    if isinstance(k_inv, str):
+        return k_inv  # Si no tiene inverso, retorna el mensaje de error de invmod
+    
+    # Convertir el texto cifrado en números usando TextToNumber
+    numeros = TextToNumber(texto_cifrado)
+    
+    # Aplicar el descifrado afín: f^-1(y) = k_inv * (y - d) % 26
+    descifrado = [(k_inv * (y - d)) % 26 for y in numeros]
+    
+    # Convertir los números descifrados de vuelta a letras
+    texto_descifrado = ''.join(chr(num + ord('A')) for num in descifrado)
+    
+    return texto_descifrado
+
+
+    # Función guesskd para estimar posibles valores de k y d
+def guesskd(identificaciones):
+    posibles_kd = []
+
+    letras_z26 = {char: i for i, char in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ")}  # Mapeo letras -> Z26
+
+    # Obtener los pares de identificaciones
+    identificaciones_llano_cifrado = list(identificaciones.items())
+
+    # Extraer la primera y segunda identificación
+    p1, e1 = identificaciones_llano_cifrado[0]
+    p2, e2 = identificaciones_llano_cifrado[1]
+
+    # Convertir letras a números Z26
+    p1_num = letras_z26[p1.upper()]
+    e1_num = letras_z26[e1.upper()]
+    p2_num = letras_z26[p2.upper()]
+    e2_num = letras_z26[e2.upper()]
+
+    # Resolver el sistema de ecuaciones para obtener k y d
+    # e1 = (k * p1 + d) % 26
+    # e2 = (k * p2 + d) % 26
+    try:
+        # Resolver para k usando la relación (e1 - e2) / (p1 - p2) mod 26
+        delta_e = (e1_num - e2_num) % 26
+        delta_p = (p1_num - p2_num) % 26
+
+        # Buscar todos los valores de k y d que satisfacen el sistema
+        for k in range(1, 26):
+            if (k * delta_p) % 26 == delta_e:
+                d = (e1_num - k * p1_num) % 26
+                posibles_kd.append((k, d))
+    except ZeroDivisionError:
+        return "No se puede resolver: los identificadores deben ser diferentes para evitar un sistema indeterminado."
+
+    return posibles_kd
+
+
+
+
+########################### Ejercicio 4 ###########################
+#Función encriptarCifradoHill. Encriptar un mensaje con cifrado Hill. 
+def encriptarCifradoHill(texto, matriz): 
+    n = 26 # Módulo 26. A=0, B=1, ..., Z=25. 
+    det = calculoDeterminante(matriz) # Calcular determinante de la matriz. 
+
+    if comprobarCalculoInversa(n, det)==1: # Comprobar si se puede calcular la inversa modular, si no se puede calcular no se podrá desencriptar. 
+        vector_texto = []
+        texto_cifrado = []
+
+        vector_texto = TextToNumber(texto)
+
+        for fila in range(len(matriz)): # Recorrer fila a fila la matriz. 
+            f = 0 
+            aux = 0 # Utilizada para guardar el valor de la multiplicación fila*columna
+            for colum in range(len(matriz)): # Recorrer columna a columna la matriz. 
+                aux += matriz[fila][colum] * vector_texto[f] # Calcular multiplicación de fila*columna
+                f += 1
+                
+            texto_cifrado.append(aux)
+
+        texto_cifrado = calcularModulo(texto_cifrado, n) 
+
+        return texto_cifrado
+    
+    else: 
+        return -1
+
+#Función desencriptarCifradoHill. Desencriptar un mensaje con cifrado Hill. 
+def desencriptarCifradoHill(mensajeEncriptado, matriz):
+    n = 26 # Módulo 26
+    matriz_inversa = InvModMatrix(matriz, n) # Calcular la inversa modular la matriz. 
+
+    texto_descifrado = []
+
+    for fila in range(len(matriz)): # Recorrer fila a fila la matriz. 
+        f = 0
+        aux = 0 # Utilizada para guardar el valor de la multiplicación fila*columna
+        for colum in range(len(matriz_inversa)): # Recorrer columna a columna la matriz. 
+            aux += matriz_inversa[fila][colum] * mensajeEncriptado[f] # Calcular multiplicación de fila*columna
+            f += 1
+                
+        texto_descifrado.append(aux)
+
+    texto_descifrado = calcularModulo(texto_descifrado, n) 
+
+    return texto_descifrado    
 
 ############################## Menú ###############################
 #Aqui inicia el programa, primero pido que elija una opcion
@@ -213,6 +348,7 @@ print("3. Elementos invertibles")
 print("4. Inversa modular matriz")
 print("5. Caracteres a cadena numerica Z26")
 print("6. Programa cifrado afin")
+print("7. Cifrado Hill")
 op=input("Elige una de las opciones: ")
 
 op=int(op)
@@ -250,9 +386,34 @@ if op==5:
     texto = input("Introduce el texto llano para cifrar con el cifrado afín: ")
     print(f"El texto cifrado usando el cifrado afín es: {TextToNumber(texto)}")
 
-if op==6:
+if op == 6:
+    # Entrada de datos para cifrar
     texto = input("Introduce el texto llano para cifrar con el cifrado afín: ")
     k = obtener_numero_entero("Introduce el valor de k (debe ser coprimo con 26): ")
     d = obtener_numero_entero("Introduce el valor de d: ")
 
-    print(f"El texto cifrado usando el cifrado afín es: {afinCypher(texto, k, d)}")
+    # Cifrado
+    texto_cifrado = afinCypher(texto, k, d)
+    print(f"El texto cifrado usando el cifrado afín es: {texto_cifrado}")
+
+    # Descifrado inmediato del texto cifrado
+    texto_descifrado = afinDecrypher(texto_cifrado, k, d)
+    print(f"El texto descifrado usando el cifrado afín es: {texto_descifrado}")
+
+if op==7: 
+    texto = input("Introduce el texto llano para cifrar con el cifrado Hill: ")
+    #dimension = obtener_numero_entero("Introduce el valor de la dimension de la matriz: ")
+    dimension=3
+    #matriz = generarMatriz(dimension)
+    matriz = [ [ 6, 24, 1 ], [ 13, 16, 10 ], [ 20, 17, 15 ] ]
+    encriptado=encriptarCifradoHill(texto, matriz)
+
+    if encriptado != -1:
+        print("El texto en cifrado Hill es: ", encriptado)
+
+    
+        desencriptado=desencriptarCifradoHill(encriptado, matriz)
+        print("El texto en descifrado Hill es: ", desencriptado)
+        print("Significado del mensaje desencriptado: ", NumberToText(desencriptado))
+    else : 
+        print("No se puede cifrar.")
