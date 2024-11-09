@@ -127,6 +127,22 @@ def NumberToText(texto):
     
     return cadena_texto
 
+def encriptarMensaje(vector_texto, matriz, n):
+    
+    texto_cifrado = []
+    for fila in range(len(matriz)): # Recorrer fila a fila la matriz. 
+        f = 0 
+        aux = 0 # Utilizada para guardar el valor de la multiplicación fila*columna
+        for colum in range(len(matriz)): # Recorrer columna a columna la matriz. 
+            aux += matriz[fila][colum] * vector_texto[f] # Calcular multiplicación de fila*columna
+            f += 1
+            
+        texto_cifrado.append(aux)
+
+    texto_cifrado = calcularModulo(texto_cifrado, n)
+
+    return texto_cifrado 
+
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -231,7 +247,7 @@ def afinCypher(texto, k, d):
 
 ########################### Ejercicio 4 ###########################
 #Función encriptarCifradoHill. Encriptar un mensaje con cifrado Hill. 
-def encriptarCifradoHill(texto, matriz): 
+def encriptarCifradoHill(texto, matriz, dimension): 
     n = 26 # Módulo 26. A=0, B=1, ..., Z=25. 
     det = calculoDeterminante(matriz) # Calcular determinante de la matriz. 
 
@@ -241,19 +257,28 @@ def encriptarCifradoHill(texto, matriz):
 
         vector_texto = TextToNumber(texto)
 
-        for fila in range(len(matriz)): # Recorrer fila a fila la matriz. 
-            f = 0 
-            aux = 0 # Utilizada para guardar el valor de la multiplicación fila*columna
-            for colum in range(len(matriz)): # Recorrer columna a columna la matriz. 
-                aux += matriz[fila][colum] * vector_texto[f] # Calcular multiplicación de fila*columna
-                f += 1
-                
-            texto_cifrado.append(aux)
+        # Si el texto tiene el mismo largo que la dimensión 
+        if len(vector_texto) == dimension: 
 
-        texto_cifrado = calcularModulo(texto_cifrado, n) 
+            texto_cifrado = encriptarMensaje(vector_texto, matriz, n)
 
-        return texto_cifrado
+            return texto_cifrado
     
+        # Si el texto es de un largo distinto al de la dimensión 
+        else: 
+            # Si el texto es más pequeño que la dimensión se rellena con otro valor (A)
+            if len(vector_texto) < dimension: 
+                while len(vector_texto) < dimension: 
+                    vector_texto.append(25) # Z=25, si el vector es más pequeño que la dimensión rellenamos con Z
+
+                texto_cifrado = encriptarMensaje(vector_texto, matriz, n)
+                
+                return texto_cifrado
+
+            # Si el texto es más largo que la dimensión se divide en bloques
+            #if len(vector_texto) > dimension:
+
+
     else: 
         return -1
 
@@ -336,7 +361,7 @@ if op==7:
     dimension=3
     #matriz = generarMatriz(dimension)
     matriz = [ [ 6, 24, 1 ], [ 13, 16, 10 ], [ 20, 17, 15 ] ]
-    encriptado=encriptarCifradoHill(texto, matriz)
+    encriptado=encriptarCifradoHill(texto, matriz, dimension)
 
     if encriptado != -1:
         print("El texto en cifrado Hill es: ", encriptado)
