@@ -308,7 +308,7 @@ def encriptarCifradoHill(texto, matriz):
             f = 0 
             aux = 0 # Utilizada para guardar el valor de la multiplicación fila*columna
             for colum in range(len(matriz)): # Recorrer columna a columna la matriz. 
-                aux += matriz[fila][colum] * vector_texto[f] # Calcular multiplicación de fila*columna
+                aux += matriz[fila][colum] * vector_texto[f] # Calcular multiplicación de fila*columna.
                 f += 1
                 
             texto_cifrado.append(aux)
