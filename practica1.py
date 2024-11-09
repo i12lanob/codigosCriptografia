@@ -275,9 +275,33 @@ def encriptarCifradoHill(texto, matriz, dimension):
                 
                 return texto_cifrado
 
-            # Si el texto es más largo que la dimensión se divide en bloques
-            #if len(vector_texto) > dimension:
+            # Si el texto es más largo que la dimensión-->se divide en bloques
+            if len(vector_texto) > dimension:
 
+                #for i in range(len(vector_texto)):
+                #    bloque = []
+                #    while len(bloque) < dimension: 
+                #        if i != dimension-1: 
+                #            bloque.append(vector_texto[i]) 
+                #        else: 
+                #            bloque.append(25) # Z=25, si el vector es más pequeño que la dimensión rellenamos con Z
+                #
+                #    texto_cifrado.append(encriptarMensaje(bloque, matriz, n))
+                
+                for i in range(0, len(vector_texto), dimension):
+                    bloque = []
+                    
+                    # Llenar el bloque hasta alcanzar el tamaño `dimension`
+                    for j in range(dimension):
+                        if i + j < len(vector_texto):  # Asegurarse de no exceder la longitud del vector
+                            bloque.append(vector_texto[i + j])
+                        else:
+                            bloque.append(25)  # Si el bloque es más pequeño que `dimension`, rellenar con Z (25)
+
+                    # Encriptar el bloque y agregarlo al texto cifrado
+                    bloque_cifrado = encriptarMensaje(bloque, matriz, n)
+                    texto_cifrado.extend(bloque_cifrado)
+                return texto_cifrado
 
     else: 
         return -1
