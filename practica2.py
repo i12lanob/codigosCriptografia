@@ -69,6 +69,15 @@ def knapsack(vector_fila):
     return 1 # Es una mochila super creciente si el valor de la suma < vector_fila[i+1]
 
 #Función knapsacksol.
+def knapsacksol(s, m):
+    j = len(s) - 1
+    while j >= 0:
+        if m >= s[j]: 
+            m -= s[j]
+
+        j -= 1
+
+    return m
 
 #Función knapsackcipher.
 
@@ -87,6 +96,7 @@ def knapsack(vector_fila):
 print("1. Cadena a ASCII")
 print("2. ASCII a letra")
 print("3. Comprobar si es mochila, supercreciente o no supercreciente")
+print ("4. V es objetivo de s")
 op=input("Elige una de las opciones: ")
 op=int(op)
 
@@ -113,3 +123,13 @@ if op == 3:
     
     else :
         print("No es mochila\n")
+
+if op == 4: 
+    s = [1, 3, 6, 13, 27]
+    #v = 19
+    v = 30
+    if knapsacksol(s, v) == 0:
+        print("V es objetivo de s\n")
+    
+    else: 
+        print("V no es objetivo de s\n")
