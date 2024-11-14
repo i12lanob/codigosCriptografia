@@ -33,6 +33,17 @@ def TextToNumber(texto):
     
     return cadena_numerica
 
+#Función NumberToBinario. Dado un vector con los números en código ASCII se pasaran a binarios. 
+def NumberToBinario(texto_numerico):
+    vector_binario = []
+
+    for num in texto_numerico:
+        #Transformar a binario. En este caso un número binario (b) de 8 caracteres y rellenar con 0 (a la izquierda)
+        binario = format(num, '08b') #format permite especificar el formato. 
+        vector_binario.append(binario)
+        
+    return vector_binario
+
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -68,18 +79,62 @@ def knapsack(vector_fila):
         
     return 1 # Es una mochila super creciente si el valor de la suma < vector_fila[i+1]
 
-#Función knapsacksol.
-def knapsacksol(s, m):
-    j = len(s) - 1
-    while j >= 0:
-        if m >= s[j]: 
-            m -= s[j]
-
-        j -= 1
-
-    return m
+#Función knapsacksol. Hecho de forma recursiva por si la mochila es no supercreciente.
+def knapsacksol(s, m, j):
+    # Caso base: si m es 0, significa que hemos encontrado una combinación
+    if m == 0:
+        return 0  # V es objetivo de s
+    
+    # Si hemos recorrido todos los elementos de s y m no es 0, no hemos encontrado solución
+    if j < 0 or m < 0:
+        return -1  # No es objetivo de s
+    
+    # Opción 1: Incluimos el elemento s[j] y restamos su valor de m
+    # Si m >= s[j]
+    if knapsacksol(s, m - s[j], j - 1) == 0:
+        return 0  # Si en alguna de las opciones conseguimos m = 0, devolvemos 0
+    
+    # Opción 2: No incluimos el elemento s[j] y seguimos con el siguiente
+    # Si m < s[j]
+    return knapsacksol(s, m, j - 1)
 
 #Función knapsackcipher.
+def knapsackcipher(vector, texto): 
+    texto_numerico = TextToNumber(texto) # Convertir el texto a codigo ASCII
+
+    binario = NumberToBinario(texto_numerico) # Convertir ASCII a binario
+
+    # Unir todos los binarios en una sola cadena
+    cadena_binaria = ''.join(binario) # Unir los valores binarios en una única cadena
+
+    cadena = []
+    # range (start, stop, step)
+    # Primer valor--> valor de inicio. 
+    # Segundo valor--> límite superior. 
+    # Tercer valor--> tamaño del paso.
+    for i in range(0, len(cadena_binaria), len(vector)): 
+        cadena_dividida = [] # Para dividir la cadena binaria en bloques según el tamaño del vector
+        
+        # Llenar el bloque hasta alcanzar el tamaño del vector
+        for j in range(len(vector)):
+            if i + j < len(cadena_binaria):  # Asegurarse de no exceder la longitud del vector
+                cadena_dividida.append(cadena_binaria[i + j])
+            else:
+                cadena_dividida.append('1')  # Si el bloque es más pequeño rellenar con 1
+        
+        cadena.append(''.join(cadena_dividida)) # Para que en el vector no quede como ['0', '1', '1', '0'], sino como ['0110']
+
+    resultado = []
+
+    for i in cadena: # Recorrer la cadena generada con los números binarios divididos en bloques
+        suma = 0
+        for j,  bit in enumerate(i): # enumerate da tanto el índice como el valor 
+            if bit == '1': # Si el valor del bit es 1 sumamos el valor
+                suma += vector[j]
+
+        resultado.append(suma)
+
+    return resultado
 
 #Función knapsackdecipher.
 
@@ -97,6 +152,7 @@ print("1. Cadena a ASCII")
 print("2. ASCII a letra")
 print("3. Comprobar si es mochila, supercreciente o no supercreciente")
 print ("4. V es objetivo de s")
+print ("5. Cifrado por mochilas")
 op=input("Elige una de las opciones: ")
 op=int(op)
 
@@ -125,11 +181,17 @@ if op == 3:
         print("No es mochila\n")
 
 if op == 4: 
-    s = [1, 3, 6, 13, 27]
+    s = [1, 6, 3, 27, 13]
     #v = 19
-    v = 30
-    if knapsacksol(s, v) == 0:
+    v = 21
+    j = len(s) - 1
+    if knapsacksol(s, v, j) == 0: # Si el valor que devuelve la función es 0 es que v es un valor objetivo de s
         print("V es objetivo de s\n")
     
-    else: 
+    else: # Si no es que v no es un valor objetivo de s
         print("V no es objetivo de s\n")
+
+if op == 5:
+    s = [1, 4, 6, 13, 25]
+    texto=input("Introduce un texto a cifrar: ")
+    print("El texto cifrado es ", knapsackcipher(s, texto), "\n")
