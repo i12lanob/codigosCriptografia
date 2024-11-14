@@ -158,7 +158,7 @@ def commonfactors(w, s):
     if w > 2:  # Si queda un número primo mayor a 2, lo añadimos
         w_factors.add(w)
 
-    # Recorremos cada elemento en s y verificamos factores comunes
+    # Recorremos cada elemento en s y verificamos factores comunes.
     for element in s:
         element_factors = set()  # Conjunto para factores primos únicos del elemento actual
         while element % 2 == 0:  # Extraemos el factor 2 del elemento
