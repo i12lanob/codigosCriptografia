@@ -146,36 +146,37 @@ def knapsackcipher(vector, texto):
 import math
 
 def commonfactors(w, s):
-    # Encontramos los factores primos de w
-    w_factors = set()  # Conjunto para almacenar factores primos únicos de w
-    while w % 2 == 0:  # Extraemos el factor 2 de w
-        w_factors.add(2)
-        w //= 2
-    for i in range(3, int(math.sqrt(w)) + 1, 2):  # Revisamos factores impares hasta la raíz cuadrada de w
-        while w % i == 0:  # Extraemos el factor i de w si es divisible
-            w_factors.add(i)
-            w //= i
-    if w > 2:  # Si queda un número primo mayor a 2, lo añadimos
-        w_factors.add(w)
-
-    # Recorremos cada elemento en s y verificamos factores comunes.
-    for element in s:
-        element_factors = set()  # Conjunto para factores primos únicos del elemento actual
-        while element % 2 == 0:  # Extraemos el factor 2 del elemento
-            element_factors.add(2)
-            element //= 2
-        for i in range(3, int(math.sqrt(element)) + 1, 2):  # Revisamos factores impares hasta la raíz cuadrada
-            while element % i == 0:  # Extraemos el factor i del elemento si es divisible
-                element_factors.add(i)
-                element //= i
-        if element > 2:  # Si queda un número primo mayor a 2, lo añadimos
-            element_factors.add(element)
-
-        # Comprobamos si hay algún factor común entre w y el elemento actual
-        if w_factors & element_factors:
-            return True  # Factor común encontrado
+    # Función para encontrar los factores primos de un número
+    def get_factors(n):
+        factors = [] #Se crea una lista vacía para almacenar los factores primos de n
+        # Comprobamos si 2 es un factor
+        while n % 2 == 0: #Verificamos si el número n es divisible por 2 (único número primo par)
+            factors.append(2) #Se añade a la lista factors
+            n //= 2 #Se divide entre dos usando la división entera
+        # Comprobamos factores impares a partir de 3
+        for i in range(3, n + 1, 2): #Se itera desde 3 hasta n, en números impares (a 3 se suma 2 y así sucesivamente)
+            while n % i == 0: #Verificamos si el número n es divisible por 3 y sus sucesivos impares
+                factors.append(i) 
+                n //= i #Se divide 𝑛 n por 𝑖 i hasta que ya no sea divisible.
+        # Si queda un número primo mayor que 2, lo añadimos
+        if n > 2: #Si 𝑛 n sigue siendo mayor que 2 ,𝑛 n es un número primo.
+            factors.append(n)
+        return factors
     
-    return False  # No se encontraron factores comunes
+    # Obtenemos los factores de w
+    w_factors = get_factors(w)
+    
+    # Recorremos la lista s
+    for number in s:
+        # Obtenemos los factores del número en s
+        s_factors = get_factors(number)
+        
+        # Verificamos si hay factores comunes
+        for factor in w_factors:
+            if factor in s_factors:
+                return True  # Si hay un factor común, devolvemos True
+    
+    return False  # Si no encontramos factores comunes, devolvemos False
 
 
 #Función knapsackpublicandprivate.
@@ -236,5 +237,5 @@ if op == 5:
 
 if op == 6:
     w = 30
-    s = [13, 7, 14]
+    s = [11, 7, 14]
     print(commonfactors(w, s))  # Esto debería devolver True porque 30 y 15 comparten el factor primo 3.
