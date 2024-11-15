@@ -62,6 +62,14 @@ def algeucl(a,b):
         a=temp # Actualizar a (nuevo dividendo)
     return a
 
+#Función buscarCoprimo_w_m. Buscamos si en el rango de m hay algún valor coprimo con w. 
+def buscarCoprimo_w_m(w, m1, m2):
+    for i in range (m1, m2):
+        if algeucl(w, i) == 1: #Si es coprimo devolvemos el valor
+            return i
+        
+    return -1 # Si no hay ningún coprimo
+
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -249,9 +257,73 @@ def knapsackpublicandprivate(s, m, w):
     return b
 
 #Función knapsackdeciphermh.
+def knapsackdeciphermh(s,m,w,criptograma):
 
+    inversa=invmod(w,m) # Calculamos el inverso de w en módulo m.
+
+    descifrado=[(i * inversa) % m for i in criptograma] # Multiplicamos el texto cifrado por el inverso.
+
+    mensaje_binario = ''
+
+    for valor in descifrado:
+        binario = [] # Lista para almacenar los valores binarios
+        for i in reversed(range(len(s))): # Rcorre la mochila supercreciente s en orden inverso
+            if valor >= s[i]: # Si el valor restante es mayor o igual a s[i], significa que está en la suma original.
+                valor -= s[i] # Restamos cada s[i] al valor actual.
+                binario.append('1') # Finalmente agrega el 1 al contribuir a la suma original. 
+            else:
+                binario.append('0') # Sino se agrega un 0 al no contribuir a la suma original.
+        mensaje_binario += ''.join(reversed(binario))
+
+        
+    longitud = len(mensaje_binario)
+    texto_plano = ''
+    i = 0
+        # Agrupar en bloques de 8 bits y convertir a ASCII
+    while i < longitud:
+        bloque = ""
+        
+        # Crear un bloque de 8 bits manualmente
+        for j in range(8):
+            if i < longitud:  # Asegurarnos de no salirnos del rango
+                bloque += mensaje_binario[i]
+                i += 1
+        
+        # Asegurarnos de que el bloque tiene 8 bits
+        if len(bloque) == 8:
+            # Convertir el bloque de binario a decimal y luego a carácter,utilizando ascii2letter
+            cadena = int(bloque, 2)
+            texto_plano += ascii2letter(cadena)
+    
+    return texto_plano
 
 ########################### Ejercicio 4 ###########################
+
+
+###################### Menú Shamir y Zimmel #######################
+def menu_Shamir_Zimmel(w, m1, m2):
+
+    n = buscarCoprimo_w_m(w, m1, m2)
+
+    if n != -1: 
+        funcion()
+
+    else: 
+        print("No hay coprimos de w en el rango de m")
+
+        print("1. Continuar con el siguiente rango")
+        print("2. Introducir otro rango")
+        op=input("Elige una de las opciones: ")
+        op=int(op)
+
+        if op == 1: 
+            resta = m2-m1
+            menu_Shamir_Zimmel(w, m1+resta+1, m2+resta+1)
+
+        if op == 2: 
+            m1 = obtener_numero_entero("Introduce el primer valor del rango de m: ")
+            m2 = obtener_numero_entero("Introduce el segundo valor del rango de m: ")
+            menu_Shamir_Zimmel(w, m1, m2)
 
 ############################## Menú ###############################
 print("1. Cadena a ASCII")
@@ -260,7 +332,8 @@ print("3. Comprobar si es mochila, supercreciente o no supercreciente")
 print ("4. V es objetivo de s")
 print ("5. Cifrado y descifrado por mochilas")
 print ("6. Factores en común")
-print("7. Cifrado con mochilas trampa")
+print("7. Cifrado y descifado con mochilas trampa")
+print("8. Encontrar mochila supercreciente")
 op=input("Elige una de las opciones: ")
 op=int(op)
 
@@ -317,8 +390,21 @@ if op == 7:
     if comprobar_valor_m(m, s): 
         w = obtener_numero_entero("Introduce el valor de w: ")
         if algeucl(m, w)==1 and commonfactors(w, s)==False: 
-            knapsackpublicandprivate(s, m, w)
+            b = knapsackpublicandprivate(s, m, w)
+            # Cifrado usando la clave pública generada
+            texto = input("Introduce el texto a cifrar con la mochila trampa: ")
+            cadena = knapsackcipher(b, texto)
+            print("El texto cifrado es: ", cadena)
+            
+            # Descifrado usando la clave privada
+            print("El texto descifrado es: ", knapsackdeciphermh(s, m, w, cadena))
         else: 
             print("m y w deben de ser coprimos y m no debe tener primos comunes con s")
     else: 
         print("El valor de m debe ser vayor que la suam de los valores de la mochila\n")
+
+if op == 8: 
+    w = obtener_numero_entero("Introduce el valor de w: ")
+    m1 = obtener_numero_entero("Introduce el primer valor del rango de m: ")
+    m2 = obtener_numero_entero("Introduce el segundo valor del rango de m: ")
+    menu_Shamir_Zimmel(w, m1, m2)
