@@ -7,6 +7,7 @@
 ###################################################################
 
 import re
+import math
 
 ###################################################################
 #Funciones útiles                                                 #
@@ -44,6 +45,23 @@ def NumberToBinario(texto_numerico):
         
     return vector_binario
 
+#Función comprobar_valor_m. Comprueba si el valor de m es mayor que todos los valores del vector s. 
+def comprobar_valor_m(m, s): 
+
+    if m > 2*s[len(s)-1]: # Si el valor de m es m>2Sn (siendo Sn el último valor del vector)
+        return 1
+    
+    else: 
+        return -1
+    
+#Función algeucl. Calcula el MCD de a y b usando el Algoritmo de Euclides.
+def algeucl(a,b): 
+    while(b!=0) :
+        temp=b # Crear una variable temporal para guardar b
+        b=a%b # Actualizar b con el resto de a y b (nuevo divisor)
+        a=temp # Actualizar a (nuevo dividendo)
+    return a
+
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -68,9 +86,11 @@ def ascii2letter(letra):
 #Función knapsack. Mochila supercreciente, no supercreciente o no es una mochila.
 def knapsack(vector_fila):
     suma = 0
-    for i in range(len(vector_fila)): # Primero mira si alguno de los valores es negativo
-        if (vector_fila[i] < 0):
-            return -1 # Si es negativo no es una mochila 
+    for i in range(len(vector_fila)): # Recorre cada elemento del vector_fila
+        if vector_fila[i] < 0 or not isinstance(vector_fila[i], int): # Verifica dos condiciones:
+        # 1. Si el elemento en la posición i es negativo (vector_fila[i] < 0)
+        # 2. Si el elemento no es un número entero (not isinstance(vector_fila[i], int))
+            return -1 # Si alguna de las dos condiciones es verdadera, retorna -1
        
     for i in range (len(vector_fila)): 
         suma += vector_fila[i]
@@ -137,13 +157,99 @@ def knapsackcipher(vector, texto):
     return resultado
 
 #Función knapsackdecipher.
+def knapsackdecipher(clave, texto_cifrado):
+    # Paso 1: Convertir cada número en `texto_cifrado` a su representación binaria usando la clave
+    texto_binario = []
+    
+    for valor in texto_cifrado:
+        binario = ""
+        suma_actual = valor
+        
+        # Recorrer la clave en reversa para descomponer el valor
+        for peso in reversed(clave): #  Invierte el orden de una lista o un vector
+            if suma_actual >= peso:
+                binario = '1' + binario # Si la suma es mayor que el propio valor se pone un 1.
+                suma_actual -= peso
+            else:
+                binario = '0' + binario # Si la suma es menor que el propio valor se pone un 0
+        
+        texto_binario.append(binario)
+    
+    # Unimos todos los binarios en una sola cadena
+    cadena_binaria = ''.join(texto_binario)
+    
+    # Agrupamos en bloques de 8 bits y convertir a texto
+    texto_plano = ""
+    longitud = len(cadena_binaria)
+    # Usamos un bucle while para recorrer la cadena
+    i = 0
+    while i < longitud:
+        bloque = ""
+        
+        # Crear un bloque de 8 bits manualmente
+        for j in range(8):
+            if i < longitud:  # Asegurarnos de no salir del rango
+                bloque += cadena_binaria[i]
+                i += 1
+        
+        # Asegurarnos de que el bloque tiene 8 bits
+        if len(bloque) == 8:
+            # Convertir el bloque de binario a decimal y luego a carácter
+            cadena=(int(bloque,2))
+            texto_plano += ascii2letter(cadena)
+    
+    return texto_plano
 
 ########################### Ejercicio 3 ###########################
 #Función commonfactors.
+def commonfactors(w, s):
+    # Función para encontrar los factores primos de un número
+    def get_factors(n):
+        factors = [] #Se crea una lista vacía para almacenar los factores primos de n
+        # Comprobamos si 2 es un factor
+        while n % 2 == 0: #Verificamos si el número n es divisible por 2 (único número primo par)
+            factors.append(2) #Se añade a la lista factors
+            n //= 2 #Se divide entre dos usando la división entera
+        # Comprobamos factores impares a partir de 3
+        for i in range(3, n + 1, 2): #Se itera desde 3 hasta n, en números impares (a 3 se suma 2 y así sucesivamente)
+            while n % i == 0: #Verificamos si el número n es divisible por 3 y sus sucesivos impares
+                factors.append(i) 
+                n //= i #Se divide 𝑛 n por 𝑖 i hasta que ya no sea divisible.
+        # Si queda un número primo mayor que 2, lo añadimos
+        if n > 2: #Si 𝑛 n sigue siendo mayor que 2 ,𝑛 n es un número primo.
+            factors.append(n)
+        return factors
+    
+    # Obtenemos los factores de w
+    w_factors = get_factors(w)
+    
+    # Recorremos la lista s
+    for number in s:
+        # Obtenemos los factores del número en s
+        s_factors = get_factors(number)
+        
+        # Verificamos si hay factores comunes
+        for factor in w_factors:
+            if factor in s_factors:
+                return True  # Si hay un factor común, devolvemos True
+    
+    return False  # Si no encontramos factores comunes, devolvemos False
 
 #Función knapsackpublicandprivate.
+def knapsackpublicandprivate(s, m, w): 
+
+    b = []
+
+    for i in range(len(s)): 
+        b.append((w * s[i]) % m) # Crear la mochila trampa bi=w*ai mod m
+
+    print("Clave privada: ", s) 
+    print("Clave pública: ", b)
+
+    return b
 
 #Función knapsackdeciphermh.
+
 
 ########################### Ejercicio 4 ###########################
 
@@ -152,7 +258,9 @@ print("1. Cadena a ASCII")
 print("2. ASCII a letra")
 print("3. Comprobar si es mochila, supercreciente o no supercreciente")
 print ("4. V es objetivo de s")
-print ("5. Cifrado por mochilas")
+print ("5. Cifrado y descifrado por mochilas")
+print ("6. Factores en común")
+print("7. Cifrado con mochilas trampa")
 op=input("Elige una de las opciones: ")
 op=int(op)
 
@@ -194,4 +302,23 @@ if op == 4:
 if op == 5:
     s = [1, 4, 6, 13, 25]
     texto=input("Introduce un texto a cifrar: ")
-    print("El texto cifrado es ", knapsackcipher(s, texto), "\n")
+    cadena=knapsackcipher(s, texto)
+    print("El texto cifrado es ", cadena, "\n")
+    print("El texto descifrado es ",knapsackdecipher(s, cadena)) 
+
+if op == 6:
+    w = 30
+    s = [11, 7, 14]
+    print(commonfactors(w, s))  # Esto debería devolver True porque 30 y 15 comparten el factor primo 3.
+
+if op == 7:
+    s = [3, 5, 11, 21]
+    m = obtener_numero_entero("Introduce el valor de m: ")
+    if comprobar_valor_m(m, s): 
+        w = obtener_numero_entero("Introduce el valor de w: ")
+        if algeucl(m, w)==1 and commonfactors(w, s)==False: 
+            knapsackpublicandprivate(s, m, w)
+        else: 
+            print("m y w deben de ser coprimos y m no debe tener primos comunes con s")
+    else: 
+        print("El valor de m debe ser vayor que la suam de los valores de la mochila\n")
