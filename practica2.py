@@ -5,8 +5,9 @@
 #Rafael Bueno Espinosa                                            #
 #Francisco Bueno Espinosa                                         #
 ###################################################################
-
+import time
 import re
+import math
 
 ###################################################################
 #Funciones útiles                                                 #
@@ -33,14 +34,6 @@ def TextToNumber(texto):
     
     return cadena_numerica
 
-def comprobar_valor_m(m, s): 
-
-    if m > 2*s[len(s)-1]: # Si el valor de m es m>2Sn (siendo Sn el último valor del vector)
-        return 1
-    
-    else: 
-        return -1
-
 #Función NumberToBinario. Dado un vector con los números en código ASCII se pasaran a binarios. 
 def NumberToBinario(texto_numerico):
     vector_binario = []
@@ -51,6 +44,33 @@ def NumberToBinario(texto_numerico):
         vector_binario.append(binario)
         
     return vector_binario
+
+#Función comprobar_valor_m. Comprueba si el valor de m es mayor que todos los valores del vector s. 
+def comprobar_valor_m(m, s): 
+
+    if m > 2*s[len(s)-1]: # Si el valor de m es m>2Sn (siendo Sn el último valor del vector)
+        return 1
+    
+    else: 
+        return -1
+    
+#Función algeucl. Calcula el MCD de a y b usando el Algoritmo de Euclides.
+def algeucl(a,b): 
+    while(b!=0) :
+        temp=b # Crear una variable temporal para guardar b
+        b=a%b # Actualizar b con el resto de a y b (nuevo divisor)
+        a=temp # Actualizar a (nuevo dividendo)
+    return a
+
+#Función buscarCoprimo_w_m. Buscamos si en el rango de m hay algún valor coprimo con w. 
+def buscarCoprimo_w_m(w, m1, m2):
+    for i in range (m1, m2):
+        if algeucl(w, i) == 1: #Si es coprimo devolvemos el valor
+            return i
+        
+    return -1 # Si no hay ningún coprimo
+
+#Función invmod. Cálculo del inverso. 
 def invmod(p, n):
     if p >= 0 and n > 0:
         if algeucl(p, n) == 1:
@@ -68,13 +88,7 @@ def invmod(p, n):
             return "Los números no son coprimos, no se puede calcular el inverso."
     else:
         return "Los números deben ser naturales."
-    
-def algeucl(a,b): 
-    while(b!=0) :
-        temp=b # Crear una variable temporal para guardar b
-        b=a%b # Actualizar b con el resto de a y b (nuevo divisor)
-        a=temp # Actualizar a (nuevo dividendo)
-    return a
+
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -99,13 +113,14 @@ def ascii2letter(letra):
 #Función knapsack. Mochila supercreciente, no supercreciente o no es una mochila.
 def knapsack(vector_fila):
     suma = 0
-    for i in range(len(vector_fila)): # Primero mira si alguno de los valores es negativo
-        if (vector_fila[i] < 0):
-            return -1 # Si es negativo no es una mochila 
+    for i in range(len(vector_fila) - 1): # Recorre cada elemento del vector_fila
+        if vector_fila[i] < 0 or not isinstance(vector_fila[i], int): # Verifica dos condiciones:
+        # 1. Si el elemento en la posición i es negativo (vector_fila[i] < 0)
+        # 2. Si el elemento no es un número entero (not isinstance(vector_fila[i], int))
+            return -1 # Si alguna de las dos condiciones es verdadera, retorna -1
        
-    for i in range (len(vector_fila)): 
         suma += vector_fila[i]
-        if suma < vector_fila[i+1]: # Si suma < vector_fila[i+1], es no supercreciente
+        if suma >= vector_fila[i+1]: # Si suma < vector_fila[i+1], es no supercreciente
             return 0
         
     return 1 # Es una mochila super creciente si el valor de la suma < vector_fila[i+1]
@@ -167,6 +182,7 @@ def knapsackcipher(vector, texto):
 
     return resultado
 
+#Función knapsackdecipher.
 def knapsackdecipher(clave, texto_cifrado):
     # Paso 1: Convertir cada número en `texto_cifrado` a su representación binaria usando la clave
     texto_binario = []
@@ -191,7 +207,6 @@ def knapsackdecipher(clave, texto_cifrado):
     # Agrupamos en bloques de 8 bits y convertir a texto
     texto_plano = ""
     longitud = len(cadena_binaria)
-
     # Usamos un bucle while para recorrer la cadena
     i = 0
     while i < longitud:
@@ -210,8 +225,6 @@ def knapsackdecipher(clave, texto_cifrado):
             texto_plano += ascii2letter(cadena)
     
     return texto_plano
-
-    
 
 ########################### Ejercicio 3 ###########################
 #Función commonfactors.
@@ -247,6 +260,7 @@ def commonfactors(w, s):
                 return True  # Si hay un factor común, devolvemos True
     
     return False  # Si no encontramos factores comunes, devolvemos False
+
 #Función knapsackpublicandprivate.
 def knapsackpublicandprivate(s, m, w): 
 
@@ -259,8 +273,9 @@ def knapsackpublicandprivate(s, m, w):
     print("Clave pública: ", b)
 
     return b
+
 #Función knapsackdeciphermh.
-def knapsackdeciphermh(s,m,w,criptograma):
+def knapsackdeciphermh(s, m, w, criptograma):
 
     inversa=invmod(w,m) # Calculamos el inverso de w en módulo m.
 
@@ -301,80 +316,152 @@ def knapsackdeciphermh(s,m,w,criptograma):
     return texto_plano
 
 ########################### Ejercicio 4 ###########################
+#Función shamirZimmel. 
+#FALTA EL TIMER Y COMPROBAR CON OTRAS MOCHILAS (CON LA DEL EJEMPLO FUNCIONA)
+def shamirZimmel(m, mochila_trampa, i=0):
+    n = len(mochila_trampa)
+    b2 = mochila_trampa[1]
+    b1 = mochila_trampa[0]
+
+    if algeucl(b2, m) == 1:
+        b2inv = invmod(b2, m)  # Calcular inversa de b2 (mochila_trampa[1])
+        q = (b1 * b2inv) % m  # Calcular q = b1 * b2^(-1) mod m
+        vector = []
+        a1 = (2 ** (n + 1 + i) * q) % m  # Ponemos el valor de a1 igual al primer valor 
+
+        # Medición del tiempo de inicio del rango
+        start_time = time.perf_counter()
+
+        for j in range(2 ** (n + i), 2 ** (n + 1 + i)):  # Valores del rango ajustados por el índice `i`
+            valor = (j * q) % m  # Calcular múltiplos modulares de q
+            if valor < a1:  # Actualizamos `a1` con el menor valor del vector generado
+                a1 = valor
+            vector.append(valor)
+
+        if algeucl(a1, m) == 1:
+            a1inv = invmod(a1, m)
+            w = (b1 * a1inv) % m  # Calcular w = b1*a1^(-1) mod m
+            winv = invmod(w, m)  # Calcular w^(-1)
+            vector_a = []
+
+            for k in range(n):  # Calcular ai=w^(-1)*bi mod m
+                vector_a.append((winv * mochila_trampa[k]) % m)
+
+            # Medición del tiempo de finalización del rango
+            end_time = time.perf_counter()
+            elapsed_time = end_time - start_time
+            print(f"Tiempo requerido en el rango {i}: {elapsed_time:.4f} segundos")
+
+            if knapsack(vector_a) == 1:  # Si es una mochila supercreciente, hemos encontrado la solución
+                print("Mochila supercreciente encontrada:", vector_a)
+                return vector_a
+            else:  # Si no es supercreciente, preguntar al usuario si quiere continuar
+                continuar = input("No es una mochila supercreciente, ¿continuamos con el siguiente rango? (s/n): ")
+                if continuar.lower() == 's':
+                    return shamirZimmel(m, mochila_trampa, i + 1)  # Llamada recursiva al siguiente rango
+                else:
+                    return -1  # Se retorna -1 si el usuario decide no continuar
+
+        else:
+            print("m y a1 deben ser coprimos")
+            return -1
+
+    else:
+        print("m y el segundo valor de la mochila trampa no son coprimos")
+        return -1
 
 ############################## Menú ###############################
-print("1. Cadena a ASCII")
-print("2. ASCII a letra")
-print("3. Comprobar si es mochila, supercreciente o no supercreciente")
-print ("4. V es objetivo de s")
-print ("5. Cifrado y descifrado por mochilas")
-print ("6. Factores en común")
-print("7. Cifrado con mochilas trampa")
-op=input("Elige una de las opciones: ")
-op=int(op)
+def menu():
+    print("1. Cadena a ASCII")
+    print("2. ASCII a letra")
+    print("3. Comprobar si es mochila, supercreciente o no supercreciente")
+    print ("4. V es objetivo de s")
+    print ("5. Cifrado y descifrado por mochilas")
+    print ("6. Factores en común")
+    print("7. Cifrado y descifado con mochilas trampa")
+    print("8. Encontrar mochila supercreciente")
+    op=input("Elige una de las opciones: ")
+    op=int(op)
 
-if op == 1: 
-    texto = input("Introduce el texto llano para cifrar con el cifrado afín: ")
-    print("La cadena ", texto, " en ASCII es ", TextToNumber(texto))
+    if op == 1: 
+        texto = input("Introduce el texto llano para cifrar con el cifrado afín: ")
+        print("La cadena ", texto, " en ASCII es ", TextToNumber(texto))
 
-if op == 2:
-    ascii = obtener_numero_entero("Introduce el valor de ascii: ")
-    if ascii>=65 and ascii<=90: 
-        print("El valor ", ascii, " en letra es ", ascii2letter(ascii))
-    else: 
-        print("El valor debe estar entre 65 y 90 (incluidos)")
-
-if op == 3: 
-    vector_fila = [2, 5, 6, 10]
-    aux = knapsack(vector_fila)
-
-    if aux == 1: 
-        print("Mochila supercreciente\n")
-
-    elif aux == 0: 
-        print("Mochila no supercreciente\n")
-    
-    else :
-        print("No es mochila\n")
-
-if op == 4: 
-    s = [1, 6, 3, 27, 13]
-    #v = 19
-    v = 21
-    j = len(s) - 1
-    if knapsacksol(s, v, j) == 0: # Si el valor que devuelve la función es 0 es que v es un valor objetivo de s
-        print("V es objetivo de s\n")
-    
-    else: # Si no es que v no es un valor objetivo de s
-        print("V no es objetivo de s\n")
-
-if op == 5:
-    s = [1, 4, 6, 13, 25]
-    texto=input("Introduce un texto a cifrar: ")
-    cadena=knapsackcipher(s, texto)
-    print("El texto cifrado es ", cadena, "\n")
-    print("El texto descifrado es ",knapsackdecipher(s, cadena)) 
-
-if op == 6:
-    w = 30
-    s = [11, 7, 14]
-    print(commonfactors(w, s))  # Esto debería devolver True porque 30 y 15 comparten el factor primo 3.
-
-if op == 7:
-    s = [3, 5, 11, 21]
-    m = obtener_numero_entero("Introduce el valor de m: ")
-    if comprobar_valor_m(m, s): 
-        w = obtener_numero_entero("Introduce el valor de w: ")
-        if algeucl(m, w)==1 and commonfactors(w, s)==False: 
-            b = knapsackpublicandprivate(s, m, w)
-            # Cifrado usando la clave pública generada
-            texto = input("Introduce el texto a cifrar con la mochila trampa: ")
-            cadena = knapsackcipher(b, texto)
-            print("El texto cifrado es: ", cadena)
-            
-            # Descifrado usando la clave privada
-            print("El texto descifrado es: ", knapsackdeciphermh(s, m, w, cadena))
+    if op == 2:
+        ascii = obtener_numero_entero("Introduce el valor de ascii: ")
+        if ascii>=65 and ascii<=90: 
+            print("El valor ", ascii, " en letra es ", ascii2letter(ascii))
         else: 
-            print("m y w deben de ser coprimos y m no debe tener primos comunes con s")
-    else: 
-        print("El valor de m debe ser vayor que la suam de los valores de la mochila\n")
+            print("El valor debe estar entre 65 y 90 (incluidos)")
+
+    if op == 3: 
+        vector_fila = [2, 5, 6, 10]
+        aux = knapsack(vector_fila)
+
+        if aux == 1: 
+            print("Mochila supercreciente\n")
+
+        elif aux == 0: 
+            print("Mochila no supercreciente\n")
+        
+        else :
+            print("No es mochila\n")
+
+    if op == 4: 
+        s = [1, 6, 3, 27, 13]
+        #v = 19
+        v = 21
+        j = len(s) - 1
+        if knapsacksol(s, v, j) == 0: # Si el valor que devuelve la función es 0 es que v es un valor objetivo de s
+            print("V es objetivo de s\n")
+        
+        else: # Si no es que v no es un valor objetivo de s
+            print("V no es objetivo de s\n")
+
+    if op == 5:
+        s = [1, 4, 6, 13, 25]
+        texto=input("Introduce un texto a cifrar: ")
+        cadena=knapsackcipher(s, texto)
+        print("El texto cifrado es ", cadena, "\n")
+        print("El texto descifrado es ",knapsackdecipher(s, cadena)) 
+
+    if op == 6:
+        w = 30
+        s = [11, 7, 14]
+        print(commonfactors(w, s))  # Esto debería devolver True porque 30 y 15 comparten el factor primo 3.
+
+    if op == 7:
+        s = [3, 5, 11, 21]
+        m = obtener_numero_entero("Introduce el valor de m: ")
+        if comprobar_valor_m(m, s): 
+            w = obtener_numero_entero("Introduce el valor de w: ")
+            if algeucl(m, w)==1 and commonfactors(w, s)==False: 
+                cadena_privada = knapsackpublicandprivate(s, m, w)
+                # Cifrado usando la clave pública generada
+                texto = input("Introduce el texto a cifrar con la mochila trampa: ")
+                cadena_cifrada = knapsackcipher(cadena_privada, texto)
+                print("El texto cifrado es: ", cadena_cifrada)
+                
+                # Descifrado usando la clave privada
+                print("El texto descifrado es: ", knapsackdeciphermh(s, m, w, cadena_cifrada))
+            else: 
+                print("m y w deben de ser coprimos y m no debe tener primos comunes con s")
+        else: 
+            print("El valor de m debe ser vayor que la suam de los valores de la mochila\n")
+
+    if op == 8: 
+        m = obtener_numero_entero("Introduce el valor de m: ")
+        mochila_trampa = [ 4500, 9000, 18000, 36000, 72000] #m 5000003
+        # Mochila trampa 
+        #mochila_trampa = [13, 9, 7, 6] 
+
+        #m=100003 mochila_trampa [ 123, 256, 512, 1024, 2048] con rango 2
+        #m=104729 mochila_trampa [23, 46, 92, 184, 368] a la primera
+
+        i = 0
+        vector = shamirZimmel(m, mochila_trampa, i)
+
+        if vector != -1:
+            print("EL vector es: ", vector)
+
+menu()
