@@ -191,7 +191,7 @@ def knapsackdecipher(clave, texto_cifrado):
         suma_actual = valor
         
         # Recorrer la clave en reversa para descomponer el valor
-        for peso in reversed(clave): #  Invierte el orden de una lista o un vector
+        for peso in reversed(clave): #  Invierte el orden de una lista o un vector usando la funcion resversed()
             if suma_actual >= peso:
                 binario = '1' + binario # Si la suma es mayor que el propio valor se pone un 1.
                 suma_actual -= peso
@@ -376,99 +376,107 @@ def shamirZimmel(m, mochila_trampa, i=0):
 
 ############################## Menú ###############################
 def menu():
-        
-    while(True):
-        print ("1. Cifrado y descifrado por mochilas")
-        print("2. Cifrado y descifado con mochilas trampa")
+    while True:
+        print("1. Cifrado y descifrado por mochilas")
+        print("2. Cifrado y descifrado con mochilas trampa")
         print("3. Encontrar mochila supercreciente")
         print("4. Salir")
-        op=input("Elige una de las opciones: ")
+        op = input("Elige una de las opciones: ")
         print("\n")
-        op=obtener_numero_entero(op)
+
+        op = int(op)
 
         if op == 1:
             s = []
-
             print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
             while True:
-                entrada = input("Número: ") # Introduce los valores de la mochila hasta que se escriba fun
+                entrada = input("Número: ")
                 if entrada.lower() == "fin":  # Salimos si el usuario escribe 'fin'
                     break
-                try: # Si ha introducido un número se convierte a entero y se añade al vector
+                try:
                     numero = int(entrada)  # Convertimos a entero
                     s.append(numero)  # Añadimos el número al vector
-                except ValueError: # Si no se ha introduce un número o no se ha escrito fin salta un error. 
+                except ValueError:
                     print("Por favor, introduce un número válido o 'fin'.")
 
-            texto=input("Introduce un texto a cifrar: ")
-            cadena=knapsackcipher(s, texto)
-            print("El texto cifrado es ", cadena, "\n")
-            print("El texto descifrado es ",knapsackdecipher(s, cadena)) 
+            if knapsack(s) == 1 or knapsack(s) == 0:
+                texto = input("Introduce un texto a cifrar: ")
+                cadena = knapsackcipher(s, texto)  # Asegúrate de que esta función esté implementada
+                print("El texto cifrado es:", cadena, "\n")
+                texto_descifrado = knapsackdecipher(s, cadena)  # Verifica también esta función
+                print("El texto descifrado es:", texto_descifrado, "\n")
+
+            else: 
+                print("No es una mochila\n")
 
         elif op == 2:
             s = []
-
             print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
             while True:
-                entrada = input("Número: ") # Introduce los valores de la mochila hasta que se escriba fun
-                if entrada.lower() == "fin":  # Salimos si el usuario escribe 'fin'
+                entrada = input("Número: ")
+                if entrada.lower() == "fin":
                     break
-                try: # Si ha introducido un número se convierte a entero y se añade al vector
-                    numero = int(entrada)  # Convertimos a entero
-                    s.append(numero)  # Añadimos el número al vector
-                except ValueError: # Si no se ha introduce un número o no se ha escrito fin salta un error. 
+                try:
+                    numero = int(entrada)
+                    s.append(numero)
+                except ValueError:
                     print("Por favor, introduce un número válido o 'fin'.")
 
+            if knapsack(s) == 1:
+                m = obtener_numero_entero("Introduce el valor de m: ")
 
-            m = obtener_numero_entero("Introduce el valor de m: ")
-            if comprobar_valor_m(m, s): 
+                if not comprobar_valor_m(m, s):
+                    print("El valor de m debe ser mayor que la suma de los valores de la mochila.\n")
+                    continue
+
+                NO DEBE INTRODUCIR LA W, LA DEBEMOS DE BUSCAR NOSOTROS
                 w = obtener_numero_entero("Introduce el valor de w: ")
-                if algeucl(m, w)==1 and commonfactors(w, s)==False: 
-                    cadena_privada = knapsackpublicandprivate(s, m, w)
-                    # Cifrado usando la clave pública generada
-                    texto = input("Introduce el texto a cifrar con la mochila trampa: ")
-                    cadena_cifrada = knapsackcipher(cadena_privada, texto)
-                    print("El texto cifrado es: ", cadena_cifrada) 
-                    
-                    # Descifrado usando la clave privada
-                    print("El texto descifrado es: ", knapsackdeciphermh(s, m, w, cadena_cifrada))
-                else: 
-                    print("m y w deben de ser coprimos y m no debe tener primos comunes con s\n")
-            else: 
-                print("El valor de m debe ser vayor que la suam de los valores de la mochila\n")
+                if algeucl(m, w) != 1 or commonfactors(w, s):
+                    print("m y w deben ser coprimos, y m no debe tener factores comunes con los valores de la mochila.\n")
+                    continue
 
-        elif op == 3: 
+                # Generar clave pública y realizar cifrado/descifrado
+                cadena_privada = knapsackpublicandprivate(s, m, w)
+                texto = input("Introduce el texto a cifrar con la mochila trampa: ")
+                
+                cadena_cifrada = knapsackcipher(cadena_privada, texto)
+                print("El texto cifrado es:", cadena_cifrada)
+
+                texto_descifrado = knapsackdeciphermh(s, m, w, cadena_cifrada)
+                print("El texto descifrado es:", texto_descifrado, "\n")
+            
+            else: 
+                print("No es una mochila supercreciente o no es una mochila\n")
+
+        elif op == 3:
             #mochila_trampa = [ 4500, 9000, 18000, 36000, 72000] #m 5000003
             #mochila_trampa = [13, 9, 7, 6] 
             #mochila_trampa = [ 123, 256, 512, 1024, 2048] #m=100003, con rango 2
             #mochila_trampa = [23, 46, 92, 184, 368] #m=104729 a la primera
-            
             mochila_trampa = []
-            
+           
             print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
             while True:
-                entrada = input("Número: ") # Introduce los valores de la mochila hasta que se escriba fun
-                if entrada.lower() == "fin":  # Salimos si el usuario escribe 'fin'
+                entrada = input("Número: ")
+                if entrada.lower() == "fin":
                     break
-                try: # Si ha introducido un número se convierte a entero y se añade al vector
-                    numero = int(entrada)  # Convertimos a entero
-                    mochila_trampa.append(numero)  # Añadimos el número al vector
-                except ValueError: # Si no se ha introduce un número o no se ha escrito fin salta un error. 
+                try:
+                    numero = int(entrada)
+                    mochila_trampa.append(numero)
+                except ValueError:
                     print("Por favor, introduce un número válido o 'fin'.")
 
             m = obtener_numero_entero("Introduce el valor de m: ")
-
-            i = 0
+            i = 0  # Rango inicial
             vector = shamirZimmel(m, mochila_trampa, i)
 
             if vector != -1:
-                print("EL vector es: ", vector)
+                print("El vector supercreciente encontrado es:", vector, "\n")
+            else:
+                print("No se pudo encontrar un vector supercreciente para el rango dado.\n")
             
-            else: 
-                print("No se continuará con el siguiente rango.\n")
-
-        elif op == 4: 
-            print("Saliendo\n")
+        elif op == 4:
+            print("Saliendo del programa.\n")
             break
 
         else:
