@@ -1,14 +1,13 @@
 ###################################################################
-#Práctica 3: Cifrado por Mochilas y Mochilas trampa               #
+# Práctica 3: Cifrado por Mochilas y Mochilas trampa              #
 ###################################################################
-#Blanca Lara Notario                                              #
-#Rafael Bueno Espinosa                                            #
-#Francisco Bueno Espinosa                                         #
+# Blanca Lara Notario                                             #
+# Rafael Bueno Espinosa                                           #
+# Francisco Bueno Espinosa                                        #
 ###################################################################
 import time
 import re
 import math
-
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
@@ -19,7 +18,7 @@ def obtener_numero_entero(mensaje):
         if entrada.isdigit():
             return int(entrada)
         else:
-            print("Por favor, introduce solo dígitos.")
+            print("Por favor, introduce solo dígitos.\n")
 
 #Función TextToNumber. Se pasa una cada de texto y se pasa a ASCII. 
 def TextToNumber(texto):
@@ -85,9 +84,9 @@ def invmod(p, n):
                 x1 += n
             return x1
         else:
-            return "Los números no son coprimos, no se puede calcular el inverso."
+            return "Los números no son coprimos, no se puede calcular el inverso.\n"
     else:
-        return "Los números deben ser naturales."
+        return "Los números deben ser naturales.\n"
 
 ###################################################################
 #Funciones principales                                            #
@@ -192,7 +191,7 @@ def knapsackdecipher(clave, texto_cifrado):
         suma_actual = valor
         
         # Recorrer la clave en reversa para descomponer el valor
-        for peso in reversed(clave): #  Invierte el orden de una lista o un vector
+        for peso in reversed(clave): #  Invierte el orden de una lista o un vector usando la funcion resversed()
             if suma_actual >= peso:
                 binario = '1' + binario # Si la suma es mayor que el propio valor se pone un 1.
                 suma_actual -= peso
@@ -229,20 +228,25 @@ def knapsackdecipher(clave, texto_cifrado):
 ########################### Ejercicio 3 ###########################
 #Función commonfactors.
 def commonfactors(w, s):
+
     # Función para encontrar los factores primos de un número
     def get_factors(n):
         factors = [] #Se crea una lista vacía para almacenar los factores primos de n
+        
         # Comprobamos si 2 es un factor
         while n % 2 == 0: #Verificamos si el número n es divisible por 2 (único número primo par)
             factors.append(2) #Se añade a la lista factors
             n //= 2 #Se divide entre dos usando la división entera
+        
+        # range (start, stop, step)
         # Comprobamos factores impares a partir de 3
         for i in range(3, n + 1, 2): #Se itera desde 3 hasta n, en números impares (a 3 se suma 2 y así sucesivamente)
             while n % i == 0: #Verificamos si el número n es divisible por 3 y sus sucesivos impares
                 factors.append(i) 
-                n //= i #Se divide 𝑛 n por 𝑖 i hasta que ya no sea divisible.
+                n //= i #Se divide n por i hasta que ya no sea divisible.
+        
         # Si queda un número primo mayor que 2, lo añadimos
-        if n > 2: #Si 𝑛 n sigue siendo mayor que 2 ,𝑛 n es un número primo.
+        if n > 2: #Si n sigue siendo mayor que 2 , n es un número primo.
             factors.append(n)
         return factors
     
@@ -264,15 +268,16 @@ def commonfactors(w, s):
 #Función knapsackpublicandprivate.
 def knapsackpublicandprivate(s, m, w): 
 
-    b = []
+    b = [] # Crear una lista pra guardar la clave pública
 
     for i in range(len(s)): 
         b.append((w * s[i]) % m) # Crear la mochila trampa bi=w*ai mod m
 
     print("Clave privada: ", s) 
     print("Clave pública: ", b)
+    print("\n")
 
-    return b
+    return b # De volvemos la clave pública
 
 #Función knapsackdeciphermh.
 def knapsackdeciphermh(s, m, w, criptograma):
@@ -317,7 +322,6 @@ def knapsackdeciphermh(s, m, w, criptograma):
 
 ########################### Ejercicio 4 ###########################
 #Función shamirZimmel. 
-#FALTA EL TIMER Y COMPROBAR CON OTRAS MOCHILAS (CON LA DEL EJEMPLO FUNCIONA)
 def shamirZimmel(m, mochila_trampa, i=0):
     n = len(mochila_trampa)
     b2 = mochila_trampa[1]
@@ -363,105 +367,121 @@ def shamirZimmel(m, mochila_trampa, i=0):
                     return -1  # Se retorna -1 si el usuario decide no continuar
 
         else:
-            print("m y a1 deben ser coprimos")
+            print("m y a1 deben ser coprimos\n")
             return -1
 
     else:
-        print("m y el segundo valor de la mochila trampa no son coprimos")
+        print("m y el segundo valor de la mochila trampa no son coprimos\n")
         return -1
 
 ############################## Menú ###############################
 def menu():
-    print("1. Cadena a ASCII")
-    print("2. ASCII a letra")
-    print("3. Comprobar si es mochila, supercreciente o no supercreciente")
-    print ("4. V es objetivo de s")
-    print ("5. Cifrado y descifrado por mochilas")
-    print ("6. Factores en común")
-    print("7. Cifrado y descifado con mochilas trampa")
-    print("8. Encontrar mochila supercreciente")
-    op=input("Elige una de las opciones: ")
-    op=int(op)
+    while True:
+        print("1. Cifrado y descifrado por mochilas")
+        print("2. Cifrado y descifrado con mochilas trampa")
+        print("3. Encontrar mochila supercreciente")
+        print("4. Salir")
+        op = input("Elige una de las opciones: ")
+        print("\n")
 
-    if op == 1: 
-        texto = input("Introduce el texto llano para cifrar con el cifrado afín: ")
-        print("La cadena ", texto, " en ASCII es ", TextToNumber(texto))
+        try:
+            op = int(op)
+        except ValueError:
+            print("Por favor, introduce un número válido entre 1 y 4.\n")
+            continue
 
-    if op == 2:
-        ascii = obtener_numero_entero("Introduce el valor de ascii: ")
-        if ascii>=65 and ascii<=90: 
-            print("El valor ", ascii, " en letra es ", ascii2letter(ascii))
-        else: 
-            print("El valor debe estar entre 65 y 90 (incluidos)")
+        if op == 1:
+            s = []
+            print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
+            while True:
+                entrada = input("Número: ")
+                if entrada.lower() == "fin":  # Salimos si el usuario escribe 'fin'
+                    break
+                try:
+                    numero = int(entrada)  # Convertimos a entero
+                    s.append(numero)  # Añadimos el número al vector
+                except ValueError:
+                    print("Por favor, introduce un número válido o 'fin'.")
+            print(f"Valores de la mochila introducidos: {s}")  # Confirmación de entrada
 
-    if op == 3: 
-        vector_fila = [2, 5, 6, 10]
-        aux = knapsack(vector_fila)
+            texto = input("Introduce un texto a cifrar: ")
+            try:
+                cadena = knapsackcipher(s, texto)  # Asegúrate de que esta función esté implementada
+                print("El texto cifrado es:", cadena, "\n")
+                texto_descifrado = knapsackdecipher(s, cadena)  # Verifica también esta función
+                print("El texto descifrado es:", texto_descifrado, "\n")
+            except Exception as e:
+                print("Ocurrió un error al cifrar o descifrar:", e)
 
-        if aux == 1: 
-            print("Mochila supercreciente\n")
+        elif op == 2:
+            s = []
+            print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
+            while True:
+                entrada = input("Número: ")
+                if entrada.lower() == "fin":
+                    break
+                try:
+                    numero = int(entrada)
+                    s.append(numero)
+                except ValueError:
+                    print("Por favor, introduce un número válido o 'fin'.")
 
-        elif aux == 0: 
-            print("Mochila no supercreciente\n")
-        
-        else :
-            print("No es mochila\n")
+            print(f"Mochila introducida: {s}")
+            try:
+                m = obtener_numero_entero("Introduce el valor de m: ")
+                if not comprobar_valor_m(m, s):
+                    print("El valor de m debe ser mayor que la suma de los valores de la mochila.")
+                    continue
+                w = obtener_numero_entero("Introduce el valor de w: ")
+                if algeucl(m, w) != 1 or commonfactors(w, s):
+                    print("m y w deben ser coprimos, y m no debe tener factores comunes con los valores de la mochila.")
+                    continue
 
-    if op == 4: 
-        s = [1, 6, 3, 27, 13]
-        #v = 19
-        v = 21
-        j = len(s) - 1
-        if knapsacksol(s, v, j) == 0: # Si el valor que devuelve la función es 0 es que v es un valor objetivo de s
-            print("V es objetivo de s\n")
-        
-        else: # Si no es que v no es un valor objetivo de s
-            print("V no es objetivo de s\n")
-
-    if op == 5:
-        s = [1, 4, 6, 13, 25]
-        texto=input("Introduce un texto a cifrar: ")
-        cadena=knapsackcipher(s, texto)
-        print("El texto cifrado es ", cadena, "\n")
-        print("El texto descifrado es ",knapsackdecipher(s, cadena)) 
-
-    if op == 6:
-        w = 30
-        s = [11, 7, 14]
-        print(commonfactors(w, s))  # Esto debería devolver True porque 30 y 15 comparten el factor primo 3.
-
-    if op == 7:
-        s = [3, 5, 11, 21]
-        m = obtener_numero_entero("Introduce el valor de m: ")
-        if comprobar_valor_m(m, s): 
-            w = obtener_numero_entero("Introduce el valor de w: ")
-            if algeucl(m, w)==1 and commonfactors(w, s)==False: 
+                # Generar clave pública y realizar cifrado/descifrado
                 cadena_privada = knapsackpublicandprivate(s, m, w)
-                # Cifrado usando la clave pública generada
                 texto = input("Introduce el texto a cifrar con la mochila trampa: ")
                 cadena_cifrada = knapsackcipher(cadena_privada, texto)
-                print("El texto cifrado es: ", cadena_cifrada)
-                
-                # Descifrado usando la clave privada
-                print("El texto descifrado es: ", knapsackdeciphermh(s, m, w, cadena_cifrada))
-            else: 
-                print("m y w deben de ser coprimos y m no debe tener primos comunes con s")
-        else: 
-            print("El valor de m debe ser vayor que la suam de los valores de la mochila\n")
+                print("El texto cifrado es:", cadena_cifrada)
+                texto_descifrado = knapsackdeciphermh(s, m, w, cadena_cifrada)
+                print("El texto descifrado es:", texto_descifrado)
+            except Exception as e:
+                print("Ocurrió un error en la opción 2:", e)
 
-    if op == 8: 
-        m = obtener_numero_entero("Introduce el valor de m: ")
-        mochila_trampa = [ 4500, 9000, 18000, 36000, 72000] #m 5000003
-        # Mochila trampa 
-        #mochila_trampa = [13, 9, 7, 6] 
+        elif op == 3:
+            #mochila_trampa = [ 4500, 9000, 18000, 36000, 72000] #m 5000003
+            #mochila_trampa = [13, 9, 7, 6] 
+            #mochila_trampa = [ 123, 256, 512, 1024, 2048] #m=100003, con rango 2
+            #mochila_trampa = [23, 46, 92, 184, 368] #m=104729 a la primera
+            mochila_trampa = []
+            print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
+            while True:
+                entrada = input("Número: ")
+                if entrada.lower() == "fin":
+                    break
+                try:
+                    numero = int(entrada)
+                    mochila_trampa.append(numero)
+                except ValueError:
+                    print("Por favor, introduce un número válido o 'fin'.")
 
-        #m=100003 mochila_trampa [ 123, 256, 512, 1024, 2048] con rango 2
-        #m=104729 mochila_trampa [23, 46, 92, 184, 368] a la primera
+            print(f"Mochila trampa introducida: {mochila_trampa}")
+            try:
+                m = obtener_numero_entero("Introduce el valor de m: ")
+                i = 0  # Rango inicial
+                vector = shamirZimmel(m, mochila_trampa, i)
 
-        i = 0
-        vector = shamirZimmel(m, mochila_trampa, i)
+                if vector != -1:
+                    print("El vector supercreciente encontrado es:", vector)
+                else:
+                    print("No se pudo encontrar un vector supercreciente para el rango dado.")
+            except Exception as e:
+                print("Ocurrió un error en la opción 3:", e)
 
-        if vector != -1:
-            print("EL vector es: ", vector)
+        elif op == 4:
+            print("Saliendo del programa.\n")
+            break
+
+        else:
+            print("Opción no válida. Por favor, elige una opción entre 1 y 4.\n")
 
 menu()
