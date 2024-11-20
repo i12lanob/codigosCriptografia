@@ -8,6 +8,7 @@
 import time
 import re
 import math
+import random
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
@@ -87,6 +88,30 @@ def invmod(p, n):
             return "Los números no son coprimos, no se puede calcular el inverso.\n"
     else:
         return "Los números deben ser naturales.\n"
+
+#Función elegir_w. Encontrar a w en un rango (dado o aleatorio).
+def elegir_w(m, s): 
+
+    while(True):
+        w = 0
+        print("\n1. Introducir rango")
+        print("2. Rango aleatorio")
+        op=input("Escoge una opción: ")
+        op = int(op)
+        
+        if op==1:
+            r1 = obtener_numero_entero("Introduce el primer valor para el rango: ")
+            r2 = obtener_numero_entero("Introduce el primer valor para el rango: ")
+            for w in range (r1, r2):
+                if algeucl(m, w) == 1 or commonfactors(w, s)==False:
+                    return w
+        if op==2: 
+            r1 = random.randint(30, 300)
+            r2 = r1 + 20
+            for w in range (r1, r2):
+                if algeucl(m, w) == 1 or commonfactors(w, s)==False:
+                    return w
+    return w
 
 ###################################################################
 #Funciones principales                                            #
@@ -296,10 +321,10 @@ def knapsackdeciphermh(s, m, w, criptograma):
                 binario.append('1') # Finalmente agrega el 1 al contribuir a la suma original. 
             else:
                 binario.append('0') # Sino se agrega un 0 al no contribuir a la suma original.
-        mensaje_binario += ''.join(reversed(binario))
+        mensaje_binario += ''.join(reversed(binario)) # Devuelve un iterador con los elementos en orden inverso.
 
         
-    longitud = len(mensaje_binario)
+    longitud = len(mensaje_binario) # Calcula la longitud de la cadena
     texto_plano = ''
     i = 0
         # Agrupar en bloques de 8 bits y convertir a ASCII
@@ -309,14 +334,14 @@ def knapsackdeciphermh(s, m, w, criptograma):
         # Crear un bloque de 8 bits manualmente
         for j in range(8):
             if i < longitud:  # Asegurarnos de no salirnos del rango
-                bloque += mensaje_binario[i]
-                i += 1
+                bloque += mensaje_binario[i] # Añadimos el bit actual al bloque
+                i += 1 # Avanzamos al siguiente índice en 'mensaje_binario'
         
         # Asegurarnos de que el bloque tiene 8 bits
         if len(bloque) == 8:
             # Convertir el bloque de binario a decimal y luego a carácter,utilizando ascii2letter
-            cadena = int(bloque, 2)
-            texto_plano += ascii2letter(cadena)
+            cadena = int(bloque, 2) # Convertir el bloque binario a un número decimal usando `int(bloque, 2)`
+            texto_plano += ascii2letter(cadena) # Añadimos la cadena al texto plano.
     
     return texto_plano
 
@@ -334,7 +359,7 @@ def shamirZimmel(m, mochila_trampa, i=0):
         a1 = (2 ** (n + 1 + i) * q) % m  # Ponemos el valor de a1 igual al primer valor 
 
         # Medición del tiempo de inicio del rango
-        start_time = time.perf_counter()
+        start_time = time.perf_counter() # Función de la biblioteca time para medir el tiempo de forma precisa.
 
         for j in range(2 ** (n + i), 2 ** (n + 1 + i)):  # Valores del rango ajustados por el índice `i`
             valor = (j * q) % m  # Calcular múltiplos modulares de q
@@ -352,9 +377,9 @@ def shamirZimmel(m, mochila_trampa, i=0):
                 vector_a.append((winv * mochila_trampa[k]) % m)
 
             # Medición del tiempo de finalización del rango
-            end_time = time.perf_counter()
-            elapsed_time = end_time - start_time
-            print(f"Tiempo requerido en el rango {i}: {elapsed_time:.4f} segundos")
+            end_time = time.perf_counter() # Función de la biblioteca time para medir el tiempo de forma precisa.
+            elapsed_time = end_time - start_time # Calculamos el tiempo restando el final y el inicial.
+            print(f"Tiempo requerido en el rango {i}: {elapsed_time:.4f} segundos")  # Imprimimos el valor
 
             if knapsack(vector_a) == 1:  # Si es una mochila supercreciente, hemos encontrado la solución
                 print("Mochila supercreciente encontrada:", vector_a)
@@ -384,11 +409,7 @@ def menu():
         op = input("Elige una de las opciones: ")
         print("\n")
 
-        try:
-            op = int(op)
-        except ValueError:
-            print("Por favor, introduce un número válido entre 1 y 4.\n")
-            continue
+        op = int(op)
 
         if op == 1:
             s = []
@@ -402,16 +423,16 @@ def menu():
                     s.append(numero)  # Añadimos el número al vector
                 except ValueError:
                     print("Por favor, introduce un número válido o 'fin'.")
-            print(f"Valores de la mochila introducidos: {s}")  # Confirmación de entrada
 
-            texto = input("Introduce un texto a cifrar: ")
-            try:
+            if knapsack(s) == 1 or knapsack(s) == 0:
+                texto = input("Introduce un texto a cifrar: ")
                 cadena = knapsackcipher(s, texto)  # Asegúrate de que esta función esté implementada
                 print("El texto cifrado es:", cadena, "\n")
                 texto_descifrado = knapsackdecipher(s, cadena)  # Verifica también esta función
                 print("El texto descifrado es:", texto_descifrado, "\n")
-            except Exception as e:
-                print("Ocurrió un error al cifrar o descifrar:", e)
+
+            else: 
+                print("No es una mochila\n")
 
         elif op == 2:
             s = []
@@ -426,26 +447,30 @@ def menu():
                 except ValueError:
                     print("Por favor, introduce un número válido o 'fin'.")
 
-            print(f"Mochila introducida: {s}")
-            try:
+            if knapsack(s) == 1:
+
+
+
                 m = obtener_numero_entero("Introduce el valor de m: ")
+
                 if not comprobar_valor_m(m, s):
-                    print("El valor de m debe ser mayor que la suma de los valores de la mochila.")
+                    print("El valor de m debe ser mayor que la suma de los valores de la mochila.\n")
                     continue
-                w = obtener_numero_entero("Introduce el valor de w: ")
-                if algeucl(m, w) != 1 or commonfactors(w, s):
-                    print("m y w deben ser coprimos, y m no debe tener factores comunes con los valores de la mochila.")
-                    continue
+
+                w = elegir_w(m, s)
 
                 # Generar clave pública y realizar cifrado/descifrado
                 cadena_privada = knapsackpublicandprivate(s, m, w)
                 texto = input("Introduce el texto a cifrar con la mochila trampa: ")
+                
                 cadena_cifrada = knapsackcipher(cadena_privada, texto)
                 print("El texto cifrado es:", cadena_cifrada)
+
                 texto_descifrado = knapsackdeciphermh(s, m, w, cadena_cifrada)
-                print("El texto descifrado es:", texto_descifrado)
-            except Exception as e:
-                print("Ocurrió un error en la opción 2:", e)
+                print("El texto descifrado es:", texto_descifrado, "\n")
+            
+            else: 
+                print("No es una mochila supercreciente o no es una mochila\n")
 
         elif op == 3:
             #mochila_trampa = [ 4500, 9000, 18000, 36000, 72000] #m 5000003
@@ -453,6 +478,7 @@ def menu():
             #mochila_trampa = [ 123, 256, 512, 1024, 2048] #m=100003, con rango 2
             #mochila_trampa = [23, 46, 92, 184, 368] #m=104729 a la primera
             mochila_trampa = []
+           
             print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
             while True:
                 entrada = input("Número: ")
@@ -464,19 +490,15 @@ def menu():
                 except ValueError:
                     print("Por favor, introduce un número válido o 'fin'.")
 
-            print(f"Mochila trampa introducida: {mochila_trampa}")
-            try:
-                m = obtener_numero_entero("Introduce el valor de m: ")
-                i = 0  # Rango inicial
-                vector = shamirZimmel(m, mochila_trampa, i)
+            m = obtener_numero_entero("Introduce el valor de m: ")
+            i = 0  # Rango inicial
+            vector = shamirZimmel(m, mochila_trampa, i)
 
-                if vector != -1:
-                    print("El vector supercreciente encontrado es:", vector)
-                else:
-                    print("No se pudo encontrar un vector supercreciente para el rango dado.")
-            except Exception as e:
-                print("Ocurrió un error en la opción 3:", e)
-
+            if vector != -1:
+                print("El vector supercreciente encontrado es:", vector, "\n")
+            else:
+                print("No se pudo encontrar un vector supercreciente para el rango dado.\n")
+            
         elif op == 4:
             print("Saliendo del programa.\n")
             break
