@@ -8,6 +8,7 @@
 import time
 import re
 import math
+import random
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
@@ -87,6 +88,30 @@ def invmod(p, n):
             return "Los números no son coprimos, no se puede calcular el inverso.\n"
     else:
         return "Los números deben ser naturales.\n"
+
+#Función elegir_w. Encontrar a w en un rango (dado o aleatorio).
+def elegir_w(m, s): 
+
+    while(True):
+        w = 0
+        print("\n1. Introducir rango")
+        print("2. Rango aleatorio")
+        op=input("Escoge una opción: ")
+        op = int(op)
+        
+        if op==1:
+            r1 = obtener_numero_entero("Introduce el primer valor para el rango: ")
+            r2 = obtener_numero_entero("Introduce el primer valor para el rango: ")
+            for w in range (r1, r2):
+                if algeucl(m, w) == 1 or commonfactors(w, s)==False:
+                    return w
+        if op==2: 
+            r1 = random.randint(1, 100)
+            r2 = r1 + 10
+            for w in range (r1, r2):
+                if algeucl(m, w) == 1 or commonfactors(w, s)==False:
+                    return w
+    return w
 
 ###################################################################
 #Funciones principales                                            #
@@ -423,17 +448,16 @@ def menu():
                     print("Por favor, introduce un número válido o 'fin'.")
 
             if knapsack(s) == 1:
+
+
+
                 m = obtener_numero_entero("Introduce el valor de m: ")
 
                 if not comprobar_valor_m(m, s):
                     print("El valor de m debe ser mayor que la suma de los valores de la mochila.\n")
                     continue
 
-                NO DEBE INTRODUCIR LA W, LA DEBEMOS DE BUSCAR NOSOTROS
-                w = obtener_numero_entero("Introduce el valor de w: ")
-                if algeucl(m, w) != 1 or commonfactors(w, s):
-                    print("m y w deben ser coprimos, y m no debe tener factores comunes con los valores de la mochila.\n")
-                    continue
+                w = elegir_w(m, s)
 
                 # Generar clave pública y realizar cifrado/descifrado
                 cadena_privada = knapsackpublicandprivate(s, m, w)
