@@ -381,8 +381,7 @@ def shamirZimmel(m, mochila_trampa, i=0):
             elapsed_time = end_time - start_time # Calculamos el tiempo restando el final y el inicial.
             print(f"Tiempo requerido en el rango {i}: {elapsed_time:.4f} segundos")  # Imprimimos el valor
 
-            if knapsack(vector_a) == 1:  # Si es una mochila supercreciente, hemos encontrado la solución
-                print("Mochila supercreciente encontrada:", vector_a)
+            if knapsack(vector_a) == 1:  # Si es una mochila supercreciente, hemos encontrado la solución.
                 return vector_a
             else:  # Si no es supercreciente, preguntar al usuario si quiere continuar
                 continuar = input("No es una mochila supercreciente, ¿continuamos con el siguiente rango? (s/n): ")
