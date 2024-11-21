@@ -6,9 +6,19 @@
 # Francisco Bueno Espinosa                                        #
 ###################################################################
 import re
+import random
+import time 
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
+#Función obtener_numero_entero. Comprobar que solo se introducen números
+def obtener_numero_entero(mensaje):
+    while True:
+        entrada = input(mensaje)
+        if entrada.isdigit():
+            return int(entrada)
+        else:
+            print("Por favor, introduce solo dígitos.\n")
 
 ###################################################################
 #Funciones principales                                            #
@@ -16,9 +26,71 @@ import re
 
 ########################### Ejercicio 1 ###########################
 #Función primosolostra. 
+def primosolostra(n, iter): 
+    
+    if n <= 1:
+        return False
+    
+    if n == 2:
+        return True
+
+    # Asegurarse que n sea impar
+    if n % 2 == 0:
+        return False
+    
+    def simbolo_legendre(a, n):
+        # Calcular el símbolo de Legendre (a/n) usando el criterio de Euler
+        if a % n == 0:
+            return 0
+        
+        # Si a^(n-1)/2 % n == 1, entonces es un residuo cuadrático (símbolo 1)
+        aux = pow(a, (n - 1) // 2, n)
+        
+        if aux == 1:
+            return 1
+        elif aux == n - 1:  # si a^(n-1)/2 ≡ -1 mod n
+            return -1
+        
+        return 0
+    
+    for _ in range(iter): # Iteramos varias veces para probar el valor de n
+
+        a = random.randint(2, n-1) # Generar una a aleatoria entre 2 y n-2
+        u=pow(a, (n-1)//2, n) # Calcular a ^ ((n-1)/2) mod(n)
+        v = simbolo_legendre(a, n)
+
+        if u != v % n: 
+            return False
+    
+    return True
 
 #Función primoMillerRabin
 
+#Función testPrimos. Llama a primosolostra y primoMillerRabin para calcular la probabilidad de que sea pseudoprimo.                
+def testPrimos(rango, iter):
+    for n in range(2, rango): 
+
+        # Medición del tiempo de inicio del rango
+        start_time = time.perf_counter() # Función de la biblioteca time para medir el tiempo de forma precisa.
+        
+        esPrimoOlostra = primosolostra(n, iter)
+        
+        # Medición del tiempo de finalización del rango
+        end_time = time.perf_counter() # Función de la biblioteca time para medir el tiempo de forma precisa.
+        elapsed_time = end_time - start_time # Calculamos el tiempo restando el final y el inicial.
+
+        if esPrimoOlostra:
+            print(f"{n} pasó el test de Solovay-Strassen")
+            prob=(1/2)**iter
+            #prob=1/(2**iter)
+            print(f"Probabilidad de que sea pseudo-primo: {prob}\n")
+
+            #break
+        else:
+            print(f"{n} NO pasó el test de Solovay-Strassen")
+
+        print(f"Tiempo requerido en el rango: {elapsed_time:.4f} segundos\n")  # Imprimimos el valor
+        
 ########################### Ejercicio 2 ###########################
 #Función keygeneration
 
@@ -55,103 +127,17 @@ import re
 def menu():
     while True:
         print("1. Cifrado y descifrado por mochilas")
-        print("2. Cifrado y descifrado con mochilas trampa")
-        print("3. Encontrar mochila supercreciente")
-        print("4. Salir")
+        print("2. Salir")
         op = input("Elige una de las opciones: ")
         print("\n")
 
         op = int(op)
 
         if op == 1:
-            s = []
-            print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
-            while True:
-                entrada = input("Número: ")
-                if entrada.lower() == "fin":  # Salimos si el usuario escribe 'fin'
-                    break
-                try:
-                    numero = int(entrada)  # Convertimos a entero
-                    s.append(numero)  # Añadimos el número al vector
-                except ValueError:
-                    print("Por favor, introduce un número válido o 'fin'.")
-
-            if knapsack(s) == 1 or knapsack(s) == 0:
-                texto = input("Introduce un texto a cifrar: ")
-                cadena = knapsackcipher(s, texto)  # Asegúrate de que esta función esté implementada
-                print("El texto cifrado es:", cadena, "\n")
-                texto_descifrado = knapsackdecipher(s, cadena)  # Verifica también esta función
-                print("El texto descifrado es:", texto_descifrado, "\n")
-
-            else: 
-                print("No es una mochila\n")
-
+            rango = obtener_numero_entero("Introduce un valor para el rango: ")
+            iter = obtener_numero_entero("Introduce un valor para el número de iteraciones: ")
+            testPrimos(rango, iter)
         elif op == 2:
-            s = []
-            print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
-            while True:
-                entrada = input("Número: ")
-                if entrada.lower() == "fin":
-                    break
-                try:
-                    numero = int(entrada)
-                    s.append(numero)
-                except ValueError:
-                    print("Por favor, introduce un número válido o 'fin'.")
-
-            if knapsack(s) == 1:
-
-
-
-                m = obtener_numero_entero("Introduce el valor de m: ")
-
-                if not comprobar_valor_m(m, s):
-                    print("El valor de m debe ser mayor que la suma de los valores de la mochila.\n")
-                    continue
-
-                w = elegir_w(m, s)
-
-                # Generar clave pública y realizar cifrado/descifrado
-                cadena_privada = knapsackpublicandprivate(s, m, w)
-                texto = input("Introduce el texto a cifrar con la mochila trampa: ")
-                
-                cadena_cifrada = knapsackcipher(cadena_privada, texto)
-                print("El texto cifrado es:", cadena_cifrada)
-
-                texto_descifrado = knapsackdeciphermh(s, m, w, cadena_cifrada)
-                print("El texto descifrado es:", texto_descifrado, "\n")
-            
-            else: 
-                print("No es una mochila supercreciente o no es una mochila\n")
-
-        elif op == 3:
-            #mochila_trampa = [ 4500, 9000, 18000, 36000, 72000] #m 5000003
-            #mochila_trampa = [13, 9, 7, 6] 
-            #mochila_trampa = [ 123, 256, 512, 1024, 2048] #m=100003, con rango 2
-            #mochila_trampa = [23, 46, 92, 184, 368] #m=104729 a la primera
-            mochila_trampa = []
-           
-            print("Introduce los valores de la mochila. Escribe 'fin' para terminar:")
-            while True:
-                entrada = input("Número: ")
-                if entrada.lower() == "fin":
-                    break
-                try:
-                    numero = int(entrada)
-                    mochila_trampa.append(numero)
-                except ValueError:
-                    print("Por favor, introduce un número válido o 'fin'.")
-
-            m = obtener_numero_entero("Introduce el valor de m: ")
-            i = 0  # Rango inicial
-            vector = shamirZimmel(m, mochila_trampa, i)
-
-            if vector != -1:
-                print("El vector supercreciente encontrado es:", vector, "\n")
-            else:
-                print("No se pudo encontrar un vector supercreciente para el rango dado.\n")
-            
-        elif op == 4:
             print("Saliendo del programa.\n")
             break
 
