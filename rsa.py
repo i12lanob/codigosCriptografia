@@ -40,7 +40,13 @@ def invmod(p, n):
     else:
         return "Los números deben ser naturales.\n"
                                                   
-
+def comprobar_primo(n):
+    if n <= 1:
+        return False  # Los números <= 1 no son primos
+    for i in range(2, n):
+        if n % i == 0:  # Si es divisible por cualquier número, no es primo
+            return False
+    return True
 ####################################################################
 #Función obtener_numero_entero. Comprobar que solo se introducen números
 def obtener_numero_entero(mensaje):
@@ -147,6 +153,9 @@ def seleccion_e(phi, opcion_e):
     return e
 
 def keygeneration(p, q, opcion_e):
+
+    if not (comprobar_primo(p) and comprobar_primo(q)):
+        print("Ambos números deben ser primos. Por favor, verifica los valores de p y q.")
     if not (p > 1 and q > 1):
         print("Ambos números deben ser mayores que 1.")
     if p == q:
@@ -167,6 +176,7 @@ def keygeneration(p, q, opcion_e):
     clave_privada = (n, d)
     
     return clave_publica, clave_privada
+
 ########################### Ejercicio 3 ###########################
 #Función textoACifras
 def TextoACifras(texto):
@@ -186,6 +196,16 @@ def TextoACifras(texto):
     
     return cadena_numerica
 
+
+def CifrasATexto(cadena_numerica):
+    texto=""
+    # Iterar sobre cada cifra en la lista
+    for cifra in cadena_numerica:
+        num = int(cifra) 
+        if 0 <= num <= 25:  # Si la cifra está entre 0 y 25, lo mapeamos a una letra
+            texto += chr(num + ord('A'))  # Convertimos el número a la letra correspondiente
+    
+    return texto
 ########################### Ejercicio 4 ###########################
 #Función preparenumcipher 
 
@@ -218,6 +238,8 @@ def menu():
         print("1. Cifrado y descifrado por mochilas")
         print("2.Prueba de claves")
         print("3. TextoACifras")
+        print("4.CifrasATexto")
+        print("5. Salir")
         op = input("Elige una de las opciones: ")
         print("\n")
 
@@ -229,8 +251,14 @@ def menu():
             testPrimos(rango, iter)
         elif op == 2:
                 # Pedir al usuario los valores de p, q y la opción para e
+                print("Posibles números primos para utilizar:") 
+                print("5, 17, 61, 103, 229, 419, 601, 887, 1201, 1697, 2083, 2593, 3253, 4001, 4999, 5647, 7001, 8089, 9437, 9929")
                 p = int(input("Introduce el primer número primo (p): "))
                 q = int(input("Introduce el segundo número primo (q): "))
+
+                if not (comprobar_primo(p) and comprobar_primo(q)) or p == q:
+                    print("Por favor, ingresa nuevamente valores válidos para p y q.")
+                    continue# Si no son válidos, volvemos a pedir los números
                 print("Opciones para e:")
                 print("1. Primo de Fermat (65537)")
                 print("2. Valor aleatorio")
@@ -254,6 +282,13 @@ def menu():
                 texto = input("Introduce el texto a convertir a cifras: ")
                 numeros = TextoACifras(texto)
                 print("Texto convertido a cifras:", numeros)
+        elif op == 4:
+                cadena = [7, 14, 11, 0, 12, 20, 13, 3, 14]
+                texto = CifrasATexto(cadena)
+                print("Cifras convertidas a texto:", texto)
+        elif op == 5:
+            print("Procedemos a salir del programa")
+            break
         else:
             print("Opción no válida. Por favor, elige una opción entre 1 y 4.\n")
 
