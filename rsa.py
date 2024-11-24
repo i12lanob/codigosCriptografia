@@ -277,10 +277,56 @@ def CifrasATexto(cadena_numerica):
             texto += chr(num + ord('A'))  # Convertimos el número a la letra correspondiente
     
     return texto
+    
 ########################### Ejercicio 4 ###########################
 #Función preparenumcipher 
+def preparenumcipher(cad_num, n): 
 
-#Función preparetextdecipher 
+    cadena = ''.join(cad_num) # Unir los valores en una única cadena
+    resultado = []
+
+    for i in range(0, len(cadena), n): 
+        cadena_dividida = [] # Para dividir la cadena en bloques de tamaño n
+        
+        for j in range(n):
+            if i + j < len(cadena):  # Asegurarse de no exceder la longitud del vector
+                cadena_dividida.append(cadena[i + j])
+            else:
+                faltan = n - len(cadena_dividida) # Ver cuántos caracteres quedan
+                if faltan == 1:  # Si falta un carácter, rellenar con '0'
+                    cadena_dividida.append('0')
+                elif faltan > 1:  # Si faltan más de un carácter, rellenar con '30'
+                    while faltan > 1:  # Rellenar bloques de '30'
+                        cadena_dividida.extend(['3', '0'])
+                        faltan -= 2
+                    if faltan == 1:  # Si aún falta un carácter, añadir '0'
+                        cadena_dividida.append('0')
+        
+        resultado.append(''.join(cadena_dividida)) # Para que en el vector no quede como ['0', '0', '0', '1'], sino como ['0001']
+
+    return resultado
+
+def preparetextdecipher(cad_num):
+    cadena = ''.join(cad_num)  # Unir los valores en una única cadena
+    resultado = []
+    i = 0
+
+    while i < len(cadena):  # Recorrer la cadena completa
+        # Revisar si estamos en los últimos bloques y necesitamos ajustar
+        if i + 1 < len(cadena):  # Si aún hay espacio para leer dos caracteres
+            if cadena[i] == '3' and cadena[i + 1] == '0':  # Detectar relleno con '30'
+                # Si encontramos relleno, saltamos estos dos caracteres
+                i += 2
+                continue
+        if i == len(cadena) - 1 and len(cadena) % 2 != 0: # Si estamos ya al final y la cadena es impar la saltamos (porque al ser impar está rellena de un 0)
+            if cadena[i] == '0':
+                break
+
+        # Agregar el carácter si no es relleno
+        resultado.append(cadena[i])
+        i += 1
+
+    return ''.join(resultado)  # Devolver la cadena sin rellenos
 
 ########################### Ejercicio 5 ###########################
 #Función rsacipher
@@ -305,16 +351,14 @@ def CifrasATexto(cadena_numerica):
 
 ############################## Menú ###############################
 def menu():
+
     while True:
         print("1. Cifrado y descifrado por mochilas")
         print("2. Prueba de claves")
-        print("3. TextoACifras")
-        print("4. CifrasATexto")
-        print("5. Salir")
-        op = input("Elige una de las opciones: ")
+        print("3. Preparar cadena numerica")
+        print("4. Salir")
+        op = int(input("Elige una de las opciones: "))
         print("\n")
-
-        op = int(op)
 
         if op == 1:
             print("Se probaran si 5 valores aleatorios del rango que introduzcas son primos")
@@ -337,46 +381,47 @@ def menu():
                 print("El primer valor del rango no debe ser 1\n")
         
         elif op == 2:
-                # Pedir al usuario los valores de p, q y la opción para e
-                print("Posibles números primos para utilizar:") 
-                print("5, 17, 61, 103, 229, 419, 601, 887, 1201, 1697, 2083, 2593, 3253, 4001, 4999, 5647, 7001, 8089, 9437, 9929")
-                p = int(input("Introduce el primer número primo (p): "))
-                q = int(input("Introduce el segundo número primo (q): "))
+            # Pedir al usuario los valores de p, q y la opción para e
+            print("Posibles números primos para utilizar:") 
+            print("5, 17, 61, 103, 229, 419, 601, 887, 1201, 1697, 2083, 2593, 3253, 4001, 4999, 5647, 7001, 8089, 9437, 9929")
+            p = int(input("Introduce el primer número primo (p): "))
+            q = int(input("Introduce el segundo número primo (q): "))
 
-                if not (comprobar_primo(p) and comprobar_primo(q)) or p == q:
-                    print("Por favor, ingresa nuevamente valores válidos para p y q.")
-                    continue# Si no son válidos, volvemos a pedir los números
-                print("Opciones para e:")
-                print("1. Primo de Fermat (65537)")
-                print("2. Valor aleatorio")
-                print("3. Introducir un valor específico")
-                e_opcion = int(input("Elige una opción para e (1, 2 o 3): "))
+            if not (comprobar_primo(p) and comprobar_primo(q)) or p == q:
+                print("Por favor, ingresa nuevamente valores válidos para p y q.")
+                continue# Si no son válidos, volvemos a pedir los números
+            
+            print("Opciones para e:")
+            print("1. Primo de Fermat (65537)")
+            print("2. Valor aleatorio")
+            print("3. Introducir un valor específico")
+            e_opcion = int(input("Elige una opción para e (1, 2 o 3): "))
 
-                if e_opcion == 1:
-                    opcion_e = "fermat"
-                elif e_opcion == 2:
-                    opcion_e = "aleatorio"
-                elif e_opcion == 3:
-                    opcion_e = int(input("Introduce el valor específico para e: "))
-                    
-                else:
-                    print("Opción no válida para e.")
-                    
-                clave_publica, clave_privada = keygeneration(p, q, opcion_e)
-                print(f"\nCLAVE PÚBLICA: {clave_publica}")
-                print(f"CLAVE PRIVADA: {clave_privada}\n")
-        
-        elif op == 3:
-                texto = input("Introduce el texto a convertir a cifras: ")
-                numeros = TextoACifras(texto)
-                print("Texto convertido a cifras:", numeros)
-        
+            if e_opcion == 1:
+                opcion_e = "fermat"
+            elif e_opcion == 2:
+                opcion_e = "aleatorio"
+            elif e_opcion == 3:
+                opcion_e = int(input("Introduce el valor específico para e: "))
+                
+            else:
+                print("Opción no válida para e.")
+                
+            clave_publica, clave_privada = keygeneration(p, q, opcion_e)
+            print(f"\nCLAVE PÚBLICA: {clave_publica}")
+            print(f"CLAVE PRIVADA: {clave_privada}\n")
+
+        elif op == 3: 
+            cadena = input("Introduce una cadena a dividir: ")
+            cadena_num=TextoACifras(cadena)
+            n = obtener_numero_entero("Introduce un valor para dividir la cadena: ")
+
+            resultado = preparenumcipher(cadena_num, n)
+            print(f"La cadena transformada y dividida queda como {resultado}\n")
+
+            print(f"La cadena transformada y dividida queda como {preparetextdecipher(resultado)}\n")
+
         elif op == 4:
-                cadena = [7, 14, 11, 0, 12, 20, 13, 3, 14]
-                texto = CifrasATexto(cadena)
-                print("Cifras convertidas a texto:", texto)
-
-        elif op == 5:
             print("Saliendo del programa.\n")
             break
 
