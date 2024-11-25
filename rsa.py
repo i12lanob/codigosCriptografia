@@ -11,6 +11,21 @@ import time
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
+#Función letter2ascii
+def letter2ascii(letra): 
+    letra = letra.upper() 
+    letra = ord(letra) # Transformar de letra a ASCII
+    
+    return letra
+
+#Función ascii2letter
+def ascii2letter(letra):   
+    # Convertimos el código ASCII a la letra que 
+    letra = chr(letra)
+    
+    # Mostramos el resultado
+    return letra
+
 #Función obtener_numero_entero. Comprobar que solo se introducen números
 def obtener_numero_entero(mensaje):
     while True:
@@ -272,7 +287,7 @@ def CifrasATexto(cadena_numerica):
     texto = ""
     # Recorrer la cadena tomando dos caracteres a la vez
     i = 0
-    while i < len(cadena_numerica):
+    while i< len(cadena_numerica):
         # Tomar dos caracteres consecutivos
         cifra = cadena_numerica[i] + cadena_numerica[i + 1]
         num = int(cifra)  # Convertir a número
@@ -333,13 +348,55 @@ def preparetextdecipher(cad_num):
 
 ########################### Ejercicio 5 ###########################
 #Función rsacipher
+def rsacipher(bloques, clave_publica):
+    n, e = clave_publica
+    bloques_cifrados = []
+    
+    # Cifrar cada bloque usando la fórmula C_i = M_i^e % n
+    for bloque in bloques:
+        c = pow(bloque, e, n)  # Cifrado con la fórmula M^e % n
+        bloques_cifrados.append(c)  # Añadir el bloque cifrado
+    
+    return bloques_cifrados
 
+# Función de descifrado RSA
+def rsadecipher(bloques_cifrados, clave_privada):
+    n, d = clave_privada
+    bloques_descifrados = []
+    
+    # Descifrar cada bloque usando la fórmula M_i = C_i^d % n
+    for bloque_cifrado in bloques_cifrados:
+        m = pow(bloque_cifrado, d, n)  # Descifrado con la fórmula C^d % n
+        bloques_descifrados.append(m)  # Añadir el bloque descifrado
+    
+    return bloques_descifrados
 #Función rsadecipher
 
 ########################### Ejercicio 6 ###########################
 #Función rsaciphertext
+def rsaciphertext(texto, clave_publica):
+    
+    # Convertir el texto en bloques numéricos (ASCII)
+    bloques = []
+    for char in texto:
+        valor_ascii = letter2ascii(char)  # Convertir cada carácter a su valor ASCII
+        bloques.append(valor_ascii)  # Agregar el valor a la lista de bloques
+    # Cifrar los bloques usando la función rsacipher
+    bloques_cifrados = rsacipher(bloques, clave_publica)
+    return bloques_cifrados
 
 #Función rsadeciphertext
+def rsadeciphertext(bloques_cifrados, clave_privada):
+    # Descifrar los bloques usando la función rsadecipher
+    bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
+
+    # Convertir los bloques descifrados de vuelta a texto
+    texto = ""
+    for bloque in bloques_descifrados:
+        char = ascii2letter(bloque)  # Convertir cada bloque descifrado a su carácter correspondiente
+        texto += char  # Agregar el carácter al texto final
+
+    return texto
 
 ########################### Ejercicio 7 ###########################
 #Función rsaciphertextsign
@@ -359,7 +416,8 @@ def menu():
         print("1. Cifrado y descifrado por mochilas")
         print("2. Prueba de claves")
         print("3. Preparar cadena numerica")
-        print("4. Salir")
+        print("4. Cifrado y descifrado RSA")
+        print("5. Salir")
         op = int(input("Elige una de las opciones: "))
         print("\n")
 
@@ -423,8 +481,37 @@ def menu():
             print(f"La cadena transformada y dividida queda como {resultado}\n")
 
             print(f"La cadena transformada y dividida queda como {preparetextdecipher(resultado)}\n")
+        elif op == 4:  # Opción añadida para Cifrado y Descifrado RSA
+            print("\nCifrado y Descifrado RSA")
+            n = int(input("Introduce el valor de n (módulo de la clave): "))
+            e = int(input("Introduce el valor de e (exponente público): "))
+            d = int(input("Introduce el valor de d (exponente privado): "))
 
-        elif op == 4:
+            # Generación de claves RSA (para este ejemplo simple asumimos que se dan directamente)
+            clave_publica = (n, e)
+            clave_privada = (n, d)
+
+            # El usuario ingresa el mensaje que quiere cifrar
+            mensaje = input("Introduce el mensaje que deseas cifrar: ")
+            mensaje_num = TextoACifras(mensaje)  # Convertir el texto a números
+
+            # Preparar los bloques numéricos
+            n_value = obtener_numero_entero("Introduce el tamaño de los bloques: ")
+            bloques = preparenumcipher(mensaje_num, n_value)
+
+            # Cifrado de bloques con la clave pública
+            print("\nCifrando el mensaje...")
+            bloques_cifrados = rsacipher(bloques, clave_publica)
+            print(f"Mensaje cifrado: {bloques_cifrados}")
+
+            # Descifrado de bloques con la clave privada
+            print("\nDescifrando el mensaje...")
+            bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
+            mensaje_final = CifrasATexto(bloques_descifrados)
+            print("Mensaje descifrado:", mensaje_final)
+         
+
+        elif op == 5:
             print("Saliendo del programa.\n")
             break
 
