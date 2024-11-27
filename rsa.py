@@ -359,7 +359,7 @@ def rsacipher(bloques, clave_publica):
     
     return bloques_cifrados
 
-# Función de descifrado RSA
+#Función rsadecipher
 def rsadecipher(bloques_cifrados, clave_privada):
     n, d = clave_privada
     bloques_descifrados = []
@@ -370,7 +370,6 @@ def rsadecipher(bloques_cifrados, clave_privada):
         bloques_descifrados.append(m)  # Añadir el bloque descifrado
     
     return bloques_descifrados
-#Función rsadecipher
 
 ########################### Ejercicio 6 ###########################
 #Función rsaciphertext
@@ -379,7 +378,7 @@ def rsaciphertext(texto, clave_publica):
     # Convertir el texto en bloques numéricos (ASCII)
     bloques = []
     for char in texto:
-        valor_ascii = letter2ascii(char)  # Convertir cada carácter a su valor ASCII
+        valor_ascii = TextoACifras(char)  # Convertir cada carácter a su valor ASCII
         bloques.append(valor_ascii)  # Agregar el valor a la lista de bloques
     # Cifrar los bloques usando la función rsacipher
     bloques_cifrados = rsacipher(bloques, clave_publica)
@@ -393,7 +392,7 @@ def rsadeciphertext(bloques_cifrados, clave_privada):
     # Convertir los bloques descifrados de vuelta a texto
     texto = ""
     for bloque in bloques_descifrados:
-        char = ascii2letter(bloque)  # Convertir cada bloque descifrado a su carácter correspondiente
+        char = CifrasATexto(bloque)  # Convertir cada bloque descifrado a su carácter correspondiente
         texto += char  # Agregar el carácter al texto final
 
     return texto
@@ -403,6 +402,40 @@ def rsadeciphertext(bloques_cifrados, clave_privada):
 
 ########################### Ejercicio 8 ###########################
 #Función rsadeciphertextsing
+
+
+
+def rsadeciphertextsign(C1, C2, clave_publica_emisor, clave_privada_receptor):
+    """
+    Descifra el mensaje y verifica la autenticidad del emisor.
+
+    Args:
+        C1: Criptograma del mensaje cifrado.
+        C2: Criptograma de la firma digital.
+        clave_publica_emisor: Clave pública del emisor (n, e).
+        clave_privada_receptor: Clave privada del receptor (n, d).
+
+    Returns:
+        Tuple: (mensaje descifrado, autenticado: True/False)
+    """
+    n_receptor, d_receptor = clave_privada_receptor
+    n_emisor, e_emisor = clave_publica_emisor
+
+    # Descifrar el mensaje usando la clave privada del receptor
+    mensaje_descifrado = pow(C1, d_receptor, n_receptor)
+
+    # Verificar la firma usando la clave pública del emisor
+    firma_verificada = pow(C2, e_emisor, n_emisor)
+
+    # Comparar el mensaje descifrado con la firma verificada
+    autenticado = mensaje_descifrado == firma_verificada
+
+    return mensaje_descifrado, autenticado
+
+
+
+
+
 
 ########################### Ejercicio 9 ###########################
 #Función cifradoGamal
@@ -509,9 +542,12 @@ def menu():
             bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
             mensaje_final = CifrasATexto(bloques_descifrados)
             print("Mensaje descifrado:", mensaje_final)
+
+        elif op ==5:
+         print("Hola")
          
 
-        elif op == 5:
+        elif op == 6:
             print("Saliendo del programa.\n")
             break
 
