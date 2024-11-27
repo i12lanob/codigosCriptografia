@@ -376,12 +376,12 @@ def rsadecipher(bloques_cifrados, clave_privada):
 def rsaciphertext(texto, clave_publica):
     
     # Convertir el texto en bloques numéricos (ASCII)
-    bloques = []
-    for char in texto:
-        valor_ascii = TextoACifras(char)  # Convertir cada carácter a su valor ASCII
-        bloques.append(valor_ascii)  # Agregar el valor a la lista de bloques
+   
+
+    bloque = TextoACifras(texto)  # Convertir cada carácter a su valor ASCII
+       
     # Cifrar los bloques usando la función rsacipher
-    bloques_cifrados = rsacipher(bloques, clave_publica)
+    bloques_cifrados = rsacipher(bloque, clave_publica)
     return bloques_cifrados
 
 #Función rsadeciphertext
