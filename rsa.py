@@ -363,20 +363,17 @@ def rsaciphertext(texto, clave_publica):
     
     # Convertir el texto en bloques numéricos (ASCII)
     bloque = TextoACifras(texto)  # Convertir cada carácter a cifras numéricas
-       
+    print(f"{bloque}")
+    print(f"clave publica {clave_publica}")
     # Cifrar los bloques usando la función rsacipher
     bloques_cifrados = rsacipher(bloque, clave_publica)
+    print(f"textillo {bloques_cifrados}")
     return bloques_cifrados
 
 #Función rsadeciphertext
 def rsadeciphertext(bloques_cifrados, clave_privada):
-    # Descifrar los bloques usando la función rsadecipher
     bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
-
-    # Convertir los bloques descifrados de vuelta a texto
-    texto = ""
-    for bloque in bloques_descifrados:
-        texto += CifrasATexto([str(bloque)]) 
+    texto = CifrasATexto(bloques_descifrados)
     return texto
 ########################### Ejercicio 7 ###########################
 #Función rsaciphertextsign
@@ -457,8 +454,8 @@ def menu():
         elif op == 4:  # Opción añadida para Cifrado y Descifrado RSA
             print("\nCifrado y Descifrado RSA")
             mensaje = ["22", "08", "04", "18", "13", "04", "19"]  # Mensaje original (representado como una lista de cadenas numéricas)
-            clave_publica = (3233, 17)  # Ejemplo de clave pública (n=3233, e=17)
-            clave_privada = (3233, 2753)
+            clave_publica = (7073, 31)  # Ejemplo de clave pública (n=3233, e=17)
+            clave_privada = (7073, 2071)
             # Convertir el mensaje a bloques de números
             bloques_numericos = preparenumcipher(mensaje, 2)  # Usamos bloques de tamaño 2
             print(f"Bloques numéricos: {bloques_numericos}")
@@ -472,11 +469,11 @@ def menu():
             fin=CifrasATexto(bloques_descifrados)
             print(f"{fin}")
         elif op == 5:
-            clave_publica = (7073, 2753)  # Ejemplo de clave pública (n, e)
-            clave_privada = (7073, 11)    # Ejemplo de clave privada (n, d)
+            clave_publica = (6782047, 65537)  # Ejemplo de clave pública (n=3233, e=17)
+            clave_privada = (6782047, 503873)  # Ejemplo de clave privada (n, d)
 
             # Texto a cifrar
-            texto = "HOLA"
+            texto = "HOLAGEI"
 
             # Cifrar el texto con la clave pública
             bloques_cifrados = rsaciphertext(texto, clave_publica)
