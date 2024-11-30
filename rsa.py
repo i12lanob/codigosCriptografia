@@ -404,12 +404,19 @@ def rsadeciphertextsign(clave_privadab, clave_publicaa, textoFirma_cifrados, fir
 
     # Convertir bloques de cifr_firma_da a enteros antes del descifrado
     firma_descifrada = rsadeciphertext(cifr_firma_da, clave_publicaa)
-    
 
-    # Separar mensaje y firma del texto descifrado
-    mensaje = mensajefirma[:-len(firma_descifrada)]
-    firma_extraida = mensajefirma[-len(firma_descifrada):]
-    print(f"firma extraida{firma_extraida}")
+    # Separar mensaje y firma usando bucles.
+    mensaje = ""
+    firma_extraida = ""
+    longitud_firma = len(firma_descifrada)
+
+    for i in range(len(mensajefirma)):
+        if i < len(mensajefirma) - longitud_firma:
+            mensaje += mensajefirma[i]
+        else:
+            firma_extraida += mensajefirma[i]
+
+    print(f"Firma extraída: {firma_extraida}")
 
     # Verificación de la firma
     if firma_extraida == firma_descifrada:
