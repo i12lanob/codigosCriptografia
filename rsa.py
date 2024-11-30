@@ -383,12 +383,38 @@ def rsaciphertextsign(clave_publicab, clave_privadaa, texto, firma):
     textoFirma_cifrados = rsaciphertext(cadena, clave_publicab) # Primer paso completado, tenemos cifrada el texto y la firma
 
     # Segundo paso, cifrar la firma primero con la clave privada de a y luego con la pública de b
-    firma_cifrada = rsaciphertext(firma, clave_privadaa) # Primero cifro con clave privada
-    firma_cifrada = rsaciphertext(firma, clave_publicab) # Después cifro con clave pública 
+    firma_cifradaa = rsaciphertext(firma, clave_privadaa) # Primero cifro con clave privada
+    firma_cifradaab = rsaciphertext(firma_cifradaa, clave_publicab) # Después cifro con clave pública 
    
-    return textoFirma_cifrados, firma_cifrada
+    return textoFirma_cifrados, firma_cifradaab
 ########################### Ejercicio 8 ###########################
 #Función rsadeciphertextsing
+def rsadeciphertextsign(clave_privadab, clave_publicaa, textoFirma_cifrados, firma_cifradaab):
+    # Descifrar C1 usando la clave privada de B para obtener mensaje + firma
+    mensajefirma = rsadeciphertext(textoFirma_cifrados, clave_privadab)
+
+    # Descifrar C2 usando la clave privada de B para obtener cifr-firma-dA
+    cifr_firma_da = rsadeciphertext(firma_cifradaab, clave_privadab)
+    print(f"cifr_firma_da antes de descifrar: {cifr_firma_da}")
+
+    # Convertir bloques de cifr_firma_da a enteros antes del descifrado
+    firma_descifrada = rsadeciphertext(cifr_firma_da, clave_publicaa)
+    
+
+    # Separar mensaje y firma del texto descifrado
+    mensaje = mensajefirma[:-len(firma_descifrada)]
+    firma_extraida = mensajefirma[-len(firma_descifrada):]
+    print(f"firma extraida{firma_extraida}")
+
+    # Verificación de la firma
+    if firma_extraida == firma_descifrada:
+        autenticado = True
+        mensaje_verificado = mensaje
+    else:
+        autenticado = False
+        mensaje_verificado = None
+
+    return mensaje_verificado, autenticado
 
 ########################### Ejercicio 9 ###########################
 #Función cifradoGamal
@@ -405,6 +431,7 @@ def menu():
         print("3. Preparar cadena numerica")
         print("4. Cifrado y descifrado RSA")
         print("5. Salir")
+        print("6.Cifrado y descifrado con firma")
         op = int(input("Elige una de las opciones: "))
         print("\n")
 
@@ -469,8 +496,8 @@ def menu():
             fin=CifrasATexto(bloques_descifrados)
             print(f"{fin}")
         elif op == 5:
-            clave_publica = (6782047, 65537)  # Ejemplo de clave pública (n=3233, e=17)
-            clave_privada = (6782047, 503873)  # Ejemplo de clave privada (n, d)
+            clave_publica = (8334083, 6568691)  # Ejemplo de clave pública (n=3233, e=17)
+            clave_privada = (8334083, 4460411)  # Ejemplo de clave privada (n, d)
 
             # Texto a cifrar
             texto = "HOLAGEI"
@@ -482,7 +509,43 @@ def menu():
             # Descifrar los bloques con la clave privada
             texto_descifrado = rsadeciphertext(bloques_cifrados, clave_privada) 
             print("Texto descifrado:", texto_descifrado)
+        
         elif op == 6:
+            print("\n--- Cifrar y firmar mensaje ---")
+            mensaje = input("Introduce el mensaje a cifrar: ").upper()
+            firma = input("Introduce la firma: ").upper()
+            
+            # Receptor B
+            nB = int(input("Introduce n de la clave pública del receptor (B): "))
+            eB = int(input("Introduce e de la clave pública del receptor (B): "))
+            clave_publicab = (nB, eB)
+            
+            # Emisor A
+            nA = int(input("Introduce n de la clave privada del emisor (A): "))
+            dA = int(input("Introduce d de la clave privada del emisor (A): "))
+            clave_privadaa = (nA, dA)
+
+            # Cifrar y firmar
+            C1, C2 = rsaciphertextsign(clave_publicab, clave_privadaa, mensaje, firma)
+            print("\nMensaje cifrado y firmado con éxito:")
+            print(f"C1 (mensaje + firma cifrados con clave pública B): {C1}")
+            print(f"C2 (firma cifrada con clave privada A y luego con clave pública B): {C2}\n")
+
+            # Descifrado y verificación
+            print("\n--- Descifrar y verificar mensaje ---")
+            dB = int(input("Introduce d de la clave privada del receptor (B): "))
+            clave_privadab = (nB, dB)
+            print(f"{clave_privadab}")
+            eA = int(input("Introduce e de la clave pública del emisor (A): "))
+            clave_publicaa = (nA, eA)
+            print(f"{clave_publicaa}")
+
+            mensaje_verificado, autenticado = rsadeciphertextsign(clave_privadab, clave_publicaa, C1, C2)
+            if autenticado:
+                print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}")
+            else:
+                print("\nFallo en la autenticación del mensaje.")
+        elif op == 7:
             print("Saliendo del programa.\n")
             break
 
