@@ -359,17 +359,22 @@ def rsadecipher(bloques_cifrados, clave_privada):
     return bloques_descifrados
 ########################### Ejercicio 6 ###########################
 #Función rsaciphertext
-def rsaciphertext(texto, clave_publica):
-    
-    # Convertir el texto en bloques numéricos (ASCII)
-    bloque = TextoACifras(texto)  # Convertir cada carácter a cifras numéricas
-    print(f"{bloque}")
-    print(f"clave publica {clave_publica}")
-    # Cifrar los bloques usando la función rsacipher
-    bloques_cifrados = rsacipher(bloque, clave_publica)
-    print(f"textillo {bloques_cifrados}")
-    return bloques_cifrados
 
+def rsaciphertext(texto, clave_publica):
+    # Paso 1: Convertir el texto en bloques numéricos (ASCII o según el alfabeto definido)
+    bloque = TextoACifras(texto)
+    print(f"Bloque numérico: {bloque}")
+    
+    # Paso 2: Preparar los bloques numéricos para el cifrado, ajustando el tamaño a la clave pública (n)
+    n = 2 # Asumiendo que 'n' es la primera parte de la clave pública (n, e)
+    bloques_preparados = preparenumcipher(bloque, n)
+    print(f"Bloques preparados para cifrado: {bloques_preparados}")
+    
+    # Paso 3: Cifrar los bloques usando la función rsacipher
+    bloques_cifrados = rsacipher(bloques_preparados, clave_publica)
+    print(f"Bloques cifrados: {bloques_cifrados}")
+    
+    return bloques_cifrados
 #Función rsadeciphertext
 def rsadeciphertext(bloques_cifrados, clave_privada):
     bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
