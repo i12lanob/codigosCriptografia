@@ -308,7 +308,7 @@ def preparenumcipher(cad_num, n):
                     if faltan == 1:  # Si aún falta un carácter, añadir '0'
                         cadena_dividida.append('0')
         
-        resultado.append(int(''.join(cadena_dividida))) # Para que en el vector no quede como ['0', '0', '0', '1'], sino como ['0001']
+        resultado.append(int(''.join(cadena_dividida))) # Para que en el vector no quede como ['0', '0', '0', '1'], sino como [0001]
 
     return resultado
 
@@ -337,10 +337,13 @@ def preparetextdecipher(vec_num):
 ########################### Ejercicio 5 ###########################
 #Función rsacipher
 def rsacipher(bloques, clave_publica):
-    n,e = clave_publica
+    n, e = clave_publica
     # Asegúrate de que cada bloque sea un entero
     bloques_cifrados = []
     for bloque in bloques:
+        # Convertir bloque a entero si no lo es
+        if isinstance(bloque, str):
+            bloque = int(bloque)
         # Aplicar cifrado RSA: C = M^e % n
         c = pow(bloque, e, n)
         bloques_cifrados.append(c)
@@ -348,7 +351,7 @@ def rsacipher(bloques, clave_publica):
 
 #Función rsadecipher
 def rsadecipher(bloques_cifrados, clave_privada):
-    n,d= clave_privada
+    n, d= clave_privada
     bloques_descifrados = []
     
     # Descifrar cada bloque usando la fórmula M_i = C_i^d % n
@@ -361,25 +364,22 @@ def rsadecipher(bloques_cifrados, clave_privada):
 ########################### Ejercicio 6 ###########################
 #Función rsaciphertext
 def rsaciphertext(texto, clave_publica):
-    # Paso 1: Convertir el texto en bloques numéricos (ASCII o según el alfabeto definido)
-    bloque = TextoACifras(texto)
-    print(f"Bloque numérico: {bloque}")
-    
+    # Paso 1: Convertir el texto en bloques numéricos 
+    cifras = TextoACifras(texto)
+    n, e = clave_publica
+    num = len(str(n))-1
     # Paso 2: Preparar los bloques numéricos para el cifrado, ajustando el tamaño a la clave pública (n)
-    n = 2 # Asumiendo que 'n' es la primera parte de la clave pública (n, e)
-    bloques_preparados = preparenumcipher(bloque, n)
-    print(f"Bloques preparados para cifrado: {bloques_preparados}")
+    bloque_preparado = preparenumcipher(cifras, num)
     
     # Paso 3: Cifrar los bloques usando la función rsacipher
-    bloques_cifrados = rsacipher(bloques_preparados, clave_publica)
-    print(f"Bloques cifrados: {bloques_cifrados}")
+    bloques_cifrados = rsacipher(bloque_preparado, clave_publica)
     
     return bloques_cifrados
 
 #Función rsadeciphertext
-def rsadeciphertext(bloques_cifrados, clave_privada):
-    bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
-    texto = CifrasATexto(bloques_descifrados)
+def rsadeciphertext(bloque_cifrado, clave_privada):
+    bloque_descifrado = rsadecipher(bloque_cifrado, clave_privada)
+    texto = CifrasATexto(preparetextdecipher(bloque_descifrado))
     return texto
 
 ########################### Ejercicio 7 ###########################
@@ -388,31 +388,45 @@ def rsaciphertextsign(clave_publicab, clave_privadaa, texto, firma):
     # Primer paso, cifrar con la clave pública de b el texto y la firma 
     cadena = ''.join([texto, firma]) # Concatenar la firma y el texto en una sola cadena
     textoFirma_cifrados = rsaciphertext(cadena, clave_publicab) # Primer paso completado, tenemos cifrada el texto y la firma
-
+    
     # Segundo paso, cifrar la firma primero con la clave privada de a y luego con la pública de b
-    firma_cifradaa = rsaciphertext(firma, clave_privadaa) # Primero cifro con clave privada
-    firma_cifradaab = rsaciphertext(firma_cifradaa, clave_publicab) # Después cifro con clave pública 
-   
-    return textoFirma_cifrados, firma_cifradaab
+    firma_cifrada = rsaciphertext(firma, clave_privadaa) # Primero cifro con clave privada
+    
+    def rellenar_ceros(num, nA):
+        num_str = str(num)
+        return ('0' * (nA - len(num_str))) + num_str
+
+    n, d = clave_privadaa
+    resultado = [rellenar_ceros(num, n) for num in firma_cifrada]
+
+    firma_cifrada2 = rsacipher(resultado, clave_publicab) # Después cifro con clave pública 
+
+    return textoFirma_cifrados, firma_cifrada2
     
 ########################### Ejercicio 8 ###########################
-#Función rsadeciphertextsing
+#Función rsadeciphertextsign
 def rsadeciphertextsign(clave_privadab, clave_publicaa, textoFirma_cifrados, firma_cifradaab):
     # Descifrar C1 usando la clave privada de B para obtener mensaje + firma
     mensajefirma = rsadeciphertext(textoFirma_cifrados, clave_privadab)
-
     # Descifrar C2 usando la clave privada de B para obtener cifr-firma-dA
     cifr_firma_da = rsadeciphertext(firma_cifradaab, clave_privadab)
     print(f"cifr_firma_da antes de descifrar: {cifr_firma_da}")
 
     # Convertir bloques de cifr_firma_da a enteros antes del descifrado
     firma_descifrada = rsadeciphertext(cifr_firma_da, clave_publicaa)
-    
 
-    # Separar mensaje y firma del texto descifrado
-    mensaje = mensajefirma[:-len(firma_descifrada)]
-    firma_extraida = mensajefirma[-len(firma_descifrada):]
-    print(f"firma extraida{firma_extraida}")
+    # Separar mensaje y firma usando bucles.
+    mensaje = ""
+    firma_extraida = ""
+    longitud_firma = len(firma_descifrada)
+
+    for i in range(len(mensajefirma)):
+        if i < len(mensajefirma) - longitud_firma:
+            mensaje += mensajefirma[i]
+        else:
+            firma_extraida += mensajefirma[i]
+
+    print(f"Firma extraída: {firma_extraida}")
 
     # Verificación de la firma
     if firma_extraida == firma_descifrada:
@@ -471,12 +485,9 @@ def menu():
         print("2. Generar claves")
         print("3. Transformar texto a cifras y cifras a texto")
         print("4. Preparar numeros ")
-        print("5. Cifrar ")
-        #print("2. Cifrado y descifrado por mochilas")
-        #print("3. Prueba de claves")
-        #print("4. Preparar cadena numerica")
-        #print("5. Cifrado y descifrado RSA")
-        #print("6.Cifrado y descifrado con firma")
+        print("5. Cifrar y descifrar numeros")
+        print("6. Cifrar y descifrar texto")
+        print("7. Cifrado y descifrao con firma ")
         print("8. Salir")
         op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
@@ -529,119 +540,37 @@ def menu():
             print(texto2)
             print(CifrasATexto(texto2), "\n")
 
-        #elif op == 2:
-        #    print("Se probaran si 5 valores aleatorios del rango que introduzcas son primos")
-        #    rango1 = obtener_numero_entero("Introduce un valor para el primer valor del rango (que no sea 1): ")
-#
-        #    if rango1 != 1: 
-        #        rango2 = obtener_numero_entero("Introduce un valor para el segundo valor del rango (que sea mayor que el primer valor): ")
-        #        if rango1 < rango2:
-        #            iter = obtener_numero_entero("Introduce un valor para el número de iteraciones: ")
-#
-        #            print("\n\n-----Test de Solovay-Strassen-----")
-        #            primosolostra(rango1, rango2, iter)
-#
-        #            print("\n\n-----Test Miller Rabin-----")
-        #            primoMillerRabin(rango1, rango2, iter)
-        #        
-        #        else: 
-        #            print("El primer valor debe ser más pequeño que el segundo\n")
-        #    else: 
-        #        print("El primer valor del rango no debe ser 1\n")
-        #
-        #elif op == 3:
-       ## Llamar a la generación de claves usando la función `keygeneration`
-        #    print("Posibles números primos para utilizar:") 
-        #    print("5, 17, 61, 103, 229, 419, 601, 887, 1201, 1697, 2083, 2593, 3253, 4001, 4999, 5647, 7001, 8089, 9437, 9929")
-        #    p = int(input("Introduce el primer número primo (p): "))
-        #    q = int(input("Introduce el segundo número primo (q): "))
-        #    
-        #    clave_publica, clave_privada = keygeneration(p, q)
-        #    if clave_publica and clave_privada:
-        #        print(f"\nCLAVE PÚBLICA: {clave_publica}")
-        #        print(f"CLAVE PRIVADA: {clave_privada}\n")
-        #    else:
-        #        print("Error en la generación de claves. Por favor, asegúrate de introducir valores válidos.\n")
-#
-        #elif op == 4: 
-        #    cadena = input("Introduce una cadena a dividir: ")
-        #    cadena_num=TextoACifras(cadena)
-        #    n = obtener_numero_entero("Introduce un valor para dividir la cadena: ")
-#
-        #    resultado = preparenumcipher(cadena_num, n)
-        #    print(f"La cadena transformada y dividida queda como {resultado}\n")
-#
-        #    print(f"La cadena transformada y dividida queda como {preparetextdecipher(resultado)}\n")
-        #
-        #elif op == 5:  # Opción añadida para Cifrado y Descifrado RSA
-        #    print("\nCifrado y Descifrado RSA")
-        #    mensaje = ["22", "08", "04", "18", "13", "04", "19"]  # Mensaje original (representado como una lista de cadenas numéricas)
-        #    clave_publica = (7073, 31)  # Ejemplo de clave pública (n=3233, e=17)
-        #    clave_privada = (7073, 2071)
-        #    # Convertir el mensaje a bloques de números
-        #    bloques_numericos = preparenumcipher(mensaje, 2)  # Usamos bloques de tamaño 2
-        #    print(f"Bloques numéricos: {bloques_numericos}")
-#
-        #    # Cifrar el mensaje
-        #    bloques_cifrados = rsacipher(bloques_numericos, clave_publica)
-        #    print(f"Mensaje cifrado: {bloques_cifrados}")
-        #    
-        #    bloques_descifrados = rsadecipher(bloques_cifrados, clave_privada)
-        #    print(f"Mensaje descifrado: {bloques_descifrados}")
-        #    fin=CifrasATexto(bloques_descifrados)
-        #    print(f"{fin}")
-        #
-        #elif op == 6:
-        #    clave_publica = (8334083, 6568691)  # Ejemplo de clave pública (n=3233, e=17)
-        #    clave_privada = (8334083, 4460411)  # Ejemplo de clave privada (n, d)
-#
-        #    # Texto a cifrar
-        #    texto = "HOLAGEI"
-#
-        #    # Cifrar el texto con la clave pública
-        #    bloques_cifrados = rsaciphertext(texto, clave_publica)
-        #    print("Texto cifrado:", bloques_cifrados)
-#
-        #    # Descifrar los bloques con la clave privada
-        #    texto_descifrado = rsadeciphertext(bloques_cifrados, clave_privada) 
-        #    print("Texto descifrado:", texto_descifrado)
-        #
-        #elif op == 7:
-        #    print("\n--- Cifrar y firmar mensaje ---")
-        #    mensaje = input("Introduce el mensaje a cifrar: ").upper()
-        #    firma = input("Introduce la firma: ").upper()
-        #    
-        #    # Receptor B
-        #    nB = int(input("Introduce n de la clave pública del receptor (B): "))
-        #    eB = int(input("Introduce e de la clave pública del receptor (B): "))
-        #    clave_publicab = (nB, eB)
-        #    
-        #    # Emisor A
-        #    nA = int(input("Introduce n de la clave privada del emisor (A): "))
-        #    dA = int(input("Introduce d de la clave privada del emisor (A): "))
-        #    clave_privadaa = (nA, dA)
-#
-        #    # Cifrar y firmar
-        #    C1, C2 = rsaciphertextsign(clave_publicab, clave_privadaa, mensaje, firma)
-        #    print("\nMensaje cifrado y firmado con éxito:")
-        #    print(f"C1 (mensaje + firma cifrados con clave pública B): {C1}")
-        #    print(f"C2 (firma cifrada con clave privada A y luego con clave pública B): {C2}\n")
-#
-        #    # Descifrado y verificación
-        #    print("\n--- Descifrar y verificar mensaje ---")
-        #    dB = int(input("Introduce d de la clave privada del receptor (B): "))
-        #    clave_privadab = (nB, dB)
-        #    print(f"{clave_privadab}")
-        #    eA = int(input("Introduce e de la clave pública del emisor (A): "))
-        #    clave_publicaa = (nA, eA)
-        #    print(f"{clave_publicaa}")
-#
-        #    mensaje_verificado, autenticado = rsadeciphertextsign(clave_privadab, clave_publicaa, C1, C2)
-        #    if autenticado:
-        #        print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}")
-        #    else:
-        #        print("\nFallo en la autenticación del mensaje.")
-        
+        elif op == 6: 
+            texto="viernes"
+            p = 643
+            q = 11
+            pu, pri= keygeneration(p, q)
+    
+            texto = rsaciphertext(texto, pu)
+            print(texto)
+
+            texto1 = rsadeciphertext(texto, pri) 
+            print(texto1)
+
+        elif op == 7: 
+            texto="prueba"
+            firma="bya"
+            pria = (143, 103)
+            pua = (143, 7)
+            pub = (1003, 3)
+            prib = (1003, 619)
+
+            C1, C2 = rsaciphertextsign(pub, pria, texto, firma)
+
+            # Descifrado y verificación¡
+            mensaje_verificado, autenticado = rsadeciphertextsign(prib, pua, C1, C2)
+            #rsadeciphertextsign(prib, pua, C1, C2)
+
+            if autenticado:
+                print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}")
+            else:
+                print("\nFallo en la autenticación del mensaje.")
+
         elif op == 8:
             print("Saliendo del programa.\n")
             break
