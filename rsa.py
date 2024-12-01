@@ -5,9 +5,17 @@
 # Rafael Bueno Espinosa                                           #
 # Francisco Bueno Espinosa                                        #
 ###################################################################
+
+###################################################################
+# Todo ha sido probado con los ejemplos subidos a moodle          #
+# Todos funcionan y sale lo mismo que en los ejemplos de moodle,  #
+# salvo el ejercicio 8, que no ha sido finalizado.                #
+###################################################################
+
 import re
 import random
 import time 
+
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
@@ -104,6 +112,15 @@ def seleccion_e(phi, e_opcion):
     else:
         print("Opción de e no válida. Usa 'fermat', 'aleatorio' o un entero.")
     return e
+
+#Función rellenar_ceros. Completar los bloques para que tengan la longitud de n
+def rellenar_ceros(num, n):
+    num_str = str(num) # Convertir el número a una cadena de caracteres
+    ceros_a_rellenar = n - len(num_str)  # Calcular cuántos ceros se necesitan
+    ceros_rellenados = '0' * ceros_a_rellenar  # Crear una cadena de ceros
+    resultado = ceros_rellenados + num_str  # Concatenar los ceros y el número original
+    return resultado  # Devolver el resultado
+    
 
 #Función ElGramal_keygeneration. Para la generación de claves para Gamal. 
 def ElGramal_keygeneration(q, g):
@@ -381,6 +398,9 @@ def rsadecipher(bloques_cifrados, clave_privada):
     # Descifrar cada bloque usando la fórmula M_i = C_i^d % n
     for bloque_cifrado in bloques_cifrados:
         m = pow(bloque_cifrado, d, n)  # Descifrado con la fórmula C^d % n
+        dig = len(str(n))-1
+        if len(str(m)) < dig:
+            m = rellenar_ceros(m, dig)
         bloques_descifrados.append(m)  # Añadir el bloque descifrado
     
     return bloques_descifrados
@@ -415,14 +435,6 @@ def rsaciphertextsign(clave_publicab, clave_privadaa, texto, firma):
     
     # Segundo paso, cifrar la firma primero con la clave privada de a y luego con la pública de b
     firma_cifrada = rsaciphertext(firma, clave_privadaa) # Primero cifro con clave privada
-    
-    # Completar los bloques para que tengan la longitud de nA
-    def rellenar_ceros(num, nA):
-        num_str = str(num) # Convertir el número a una cadena de caracteres
-        ceros_a_rellenar = nA - len(num_str)  # Calcular cuántos ceros se necesitan
-        ceros_rellenados = '0' * ceros_a_rellenar  # Crear una cadena de ceros
-        resultado = ceros_rellenados + num_str  # Concatenar los ceros y el número original
-        return resultado  # Devolver el resultado
 
     n, d = clave_privadaa
     resultado = [rellenar_ceros(num, n) for num in firma_cifrada] # Completar los bloques
@@ -432,39 +444,51 @@ def rsaciphertextsign(clave_publicab, clave_privadaa, texto, firma):
     return textoFirma_cifrados, firma_cifrada2
     
 ########################### Ejercicio 8 ###########################
+#Por falta de tiempo esta función no ha sido finalizada ya que nos daba fallos
+#que no hemos visto hasta el último momento, cuando ya no quedaba tiempo
+#Devolvemos solo un mensaje de la primera parte, descifrado de texto y firma
 #Función rsadeciphertextsign
 def rsadeciphertextsign(clave_privadab, clave_publicaa, textoFirma_cifrados, firma_cifradaab):
     # Descifrar C1 usando la clave privada de B para obtener mensaje + firma
     mensajefirma = rsadeciphertext(textoFirma_cifrados, clave_privadab)
+
     # Descifrar C2 usando la clave privada de B para obtener cifr-firma-dA
-    cifr_firma_da = rsadeciphertext(firma_cifradaab, clave_privadab)
+    cifr_firma_da = rsadecipher(firma_cifradaab, clave_privadab)
     print(f"cifr_firma_da antes de descifrar: {cifr_firma_da}")
 
-    # Convertir bloques de cifr_firma_da a enteros antes del descifrado
-    firma_descifrada = rsadeciphertext(cifr_firma_da, clave_publicaa)
+    n, e = clave_publicaa # Sacar el valor de n de la clave pública de a
 
-    # Separar mensaje y firma usando bucles.
-    mensaje = ""
-    firma_extraida = ""
-    longitud_firma = len(firma_descifrada)
+    cifras = ''.join(cifr_firma_da) # Concatenar el texto descifrado con la privada de b
+    
+    return mensajefirma
+    #firma_descifrada = preparenumcipher(cifras, len(str(n))-1)
 
-    for i in range(len(mensajefirma)):
-        if i < len(mensajefirma) - longitud_firma:
-            mensaje += mensajefirma[i]
-        else:
-            firma_extraida += mensajefirma[i]
+    ## Convertir bloques de cifr_firma_da a enteros antes del descifrado
+    #firma_descifrada = rsadeciphertext(firma_descifrada, clave_publicaa)
+    #print(firma_descifrada)
 
-    print(f"Firma extraída: {firma_extraida}")
-
-    # Verificación de la firma
-    if firma_extraida == firma_descifrada:
-        autenticado = True
-        mensaje_verificado = mensaje
-    else:
-        autenticado = False
-        mensaje_verificado = None
-
-    return mensaje_verificado, autenticado
+    ## Separar mensaje y firma usando bucles.
+    #mensaje = ""
+    #firma_extraida = ""
+    #longitud_firma = len(firma_descifrada)
+#
+    #for i in range(len(mensajefirma)):
+    #    if i < len(mensajefirma) - longitud_firma:
+    #        mensaje += mensajefirma[i]
+    #    else:
+    #        firma_extraida += mensajefirma[i]
+#
+    #print(f"Firma extraída: {firma_extraida}")
+#
+    ## Verificación de la firma
+    #if firma_extraida == firma_descifrada:
+    #    autenticado = True
+    #    mensaje_verificado = mensaje
+    #else:
+    #    autenticado = False
+    #    mensaje_verificado = None
+#
+    #return mensaje_verificado, autenticado
 
 ########################### Ejercicio 9 ###########################
 #Función CifradoElGramal.
@@ -579,6 +603,14 @@ def menu():
                 print("p y q deben ser primos\n")
 
         elif op == 3: 
+            #texto = "prueba"
+            #firma = "bya"
+#
+            #pria=(143, 103)
+            #pua=(143, 7)
+            #prib=(1003,619)
+            #pub=(1003,3)
+
             texto = input("Introduce el texto a cifrar: ")
             firma =input("Introduce la firma: ")
 
@@ -598,17 +630,42 @@ def menu():
                     print(f"Texto y firma cifrados: {C1} \n")
                     print(f"Firma cifrada {C2} \n")
 
-                    # Descifrado y verificación¡
-                    mensaje_verificado, autenticado = rsadeciphertextsign(prib, pua, C1, C2)
-
-                    if autenticado:
-                        print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}\n")
-                    else:
-                        print("Fallo en la autenticación del mensaje.\n")
+                    print(rsadeciphertextsign(prib, pua, C1, C2))
                 else: 
                     print("p y q deben ser primos\n")
             else: 
                 print("p y q deben ser primos\n")
+
+            #texto = input("Introduce el texto a cifrar: ")
+            #firma =input("Introduce la firma: ")
+#
+            #pa = obtener_numero_entero("Introduce un valor p para a: ")
+            #qa = obtener_numero_entero("Introduce un valor q para a: ")
+#
+            #if comprobar_primo(pa) and comprobar_primo(qa):
+            #    pua, pria = keygeneration(pa, qa)
+#
+            #    pb = obtener_numero_entero("\nIntroduce un valor p para b: ")
+            #    qb  = obtener_numero_entero("Introduce un valor q para b: ")
+#
+            #    if comprobar_primo(pb) and comprobar_primo(qb):
+            #        pub, prib = keygeneration(pb, qb)
+#
+            #        C1, C2 = rsaciphertextsign(pub, pria, texto, firma)
+            #        print(f"Texto y firma cifrados: {C1} \n")
+            #        print(f"Firma cifrada {C2} \n")
+#
+            #        # Descifrado y verificación¡
+            #        mensaje_verificado, autenticado = rsadeciphertextsign(prib, pua, C1, C2)
+#
+            #        if autenticado:
+            #            print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}\n")
+            #        else:
+            #            print("Fallo en la autenticación del mensaje.\n")
+            #    else: 
+            #        print("p y q deben ser primos\n")
+            #else: 
+            #    print("p y q deben ser primos\n")
             
 
         elif op == 4: 
