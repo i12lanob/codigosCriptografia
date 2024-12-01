@@ -28,6 +28,7 @@ def generarN(rango1, rango2, nGeneradas):
             nGeneradas.append(n)
             return n
 
+#Función simbolo_legendre. Calculamos el valor que tendrá a/n para el SolovayStrassen
 def simbolo_legendre(a, n):
     # Calcular el símbolo de Legendre (a/n) usando el criterio de Euler
     if a % n == 0:
@@ -84,18 +85,18 @@ def invmod(p, n):
 #Función seleccion_e
 def seleccion_e(phi, e_opcion):
    
-    if e_opcion == "fermat":
+    if e_opcion == "fermat": # Si ha seleccionado la opción de Fermat 
         e = 65537  # Primo de Fermat
 
         if algeucl(e, phi) != 1:
             print("e=65537 no es coprimo con φ(n). Selecciona otra opción.")
 
-    elif e_opcion == "aleatorio":
+    elif e_opcion == "aleatorio": # Si ha seleccionado la opción de aleatorio
         while True:
             e = random.randint(2, phi - 1) # Valor aleatorio entre 2 y phi - 1
             if algeucl(e, phi) == 1:
                 break
-    elif isinstance(e_opcion, int):
+    elif isinstance(e_opcion, int): # Si él introduce el valor
         e = e_opcion
 
         if algeucl(e, phi) != 1:
@@ -103,6 +104,27 @@ def seleccion_e(phi, e_opcion):
     else:
         print("Opción de e no válida. Usa 'fermat', 'aleatorio' o un entero.")
     return e
+
+#Función ElGramal_keygeneration. Para la generación de claves para Gamal. 
+def ElGramal_keygeneration(q, g):
+    a = random.randint(2, q - 2)  # Clave privada
+    clave_publica = pow(g, a, q)  # g^a mod q
+    return a, clave_publica
+
+#Función CifrasATextoGamal. Ya que CifradoATexto no funciona correctamente en Gamal.
+def CifrasATextoGamal(cifras):
+    # Diccionario que mapea números a letras en Z27 (A-Z + Ñ)
+    alfabeto = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'
+    texto = ''
+    
+    for cifra in cifras:
+        numero = int(cifra)
+        if 0 <= numero <= 26:  # Asegurarse de que el número está en el rango válido
+            texto += alfabeto[numero]  # Convertir el número de vuelta a una letra
+        else:
+            texto += '?'  # Si hay un valor fuera de rango, reemplazar por un signo de interrogación
+    
+    return texto
 
 ###################################################################
 #Funciones principales                                            #
@@ -245,6 +267,7 @@ def keygeneration(p, q):
                
     else:
         print("Opción no válida para e.")
+
     # Selección de e usando la función auxiliar   
     e = seleccion_e(phi, e_opcion)
 
@@ -312,8 +335,8 @@ def preparenumcipher(cad_num, n):
 
     return resultado
 
+#Función preparetextdecipher
 def preparetextdecipher(vec_num):
-    #cadena = ''.join(vec_num)  # Unir los valores en una única cadena
     cadena = ''.join(str(num) for num in vec_num)  
     resultado = []
     i = 0
@@ -338,12 +361,13 @@ def preparetextdecipher(vec_num):
 #Función rsacipher
 def rsacipher(bloques, clave_publica):
     n, e = clave_publica
-    # Asegúrate de que cada bloque sea un entero
+    
     bloques_cifrados = []
     for bloque in bloques:
         # Convertir bloque a entero si no lo es
         if isinstance(bloque, str):
             bloque = int(bloque)
+
         # Aplicar cifrado RSA: C = M^e % n
         c = pow(bloque, e, n)
         bloques_cifrados.append(c)
@@ -392,12 +416,16 @@ def rsaciphertextsign(clave_publicab, clave_privadaa, texto, firma):
     # Segundo paso, cifrar la firma primero con la clave privada de a y luego con la pública de b
     firma_cifrada = rsaciphertext(firma, clave_privadaa) # Primero cifro con clave privada
     
+    # Completar los bloques para que tengan la longitud de nA
     def rellenar_ceros(num, nA):
-        num_str = str(num)
-        return ('0' * (nA - len(num_str))) + num_str
+        num_str = str(num) # Convertir el número a una cadena de caracteres
+        ceros_a_rellenar = nA - len(num_str)  # Calcular cuántos ceros se necesitan
+        ceros_rellenados = '0' * ceros_a_rellenar  # Crear una cadena de ceros
+        resultado = ceros_rellenados + num_str  # Concatenar los ceros y el número original
+        return resultado  # Devolver el resultado
 
     n, d = clave_privadaa
-    resultado = [rellenar_ceros(num, n) for num in firma_cifrada]
+    resultado = [rellenar_ceros(num, n) for num in firma_cifrada] # Completar los bloques
 
     firma_cifrada2 = rsacipher(resultado, clave_publicab) # Después cifro con clave pública 
 
@@ -439,10 +467,52 @@ def rsadeciphertextsign(clave_privadab, clave_publicaa, textoFirma_cifrados, fir
     return mensaje_verificado, autenticado
 
 ########################### Ejercicio 9 ###########################
-#Función cifradoGamal
+#Función CifradoElGramal.
+def CifradoElGramal(mensaje, q, g, clave_publica):
+    k = random.randint(2, q - 2)  # Número aleatorio
+    g_a = clave_publica  # La clave pública de A es g^a mod q, que es el valor dado
+    g_k = pow(g, k, q)  # g^k mod q
+    g_ak = pow(g_a, k, q)  # (g^a)^k mod q, que es lo que se usa para cifrar
 
+    # Convertir mensaje a formato numérico usando TextoACifras
+    mensaje_cifras = TextoACifras(mensaje)
+    
+    # Separar la cadena en bloques de 1 cifra
+    mensaje_separado = []
+    for cifra in mensaje_cifras:
+        for digito in cifra:
+            mensaje_separado.append(int(digito))
 
-#Función descifradoGamal
+    # Cifrar cada cifra multiplicando por g^ak mod q
+    cifrado = []
+    for digito in mensaje_separado:
+        cifrado.append((digito * g_ak) % q)
+
+    return g_k, cifrado
+
+#Función DescifradoElGramal.
+def DescifradoElGramal(g_k, cifrado, q, a):
+    # Paso 1: Calcular g^k * a mod q
+    g_ka = pow(g_k, a, q)
+    # Paso 2: Calcular el inverso modular de g_ka mod q
+    g_ka_inv = invmod(g_ka, q)
+    # Paso 3: Multiplicar cada bloque cifrado por el inverso modular de g_ka mod q
+    bloques_descifrados = []
+    for c in cifrado:
+        bloques_descifrados.append((c * g_ka_inv) % q)
+        
+    # Paso 4: Agrupar los bloques de dos en dos y unirlos correctamente
+    bloques_descifrados_grupos = []
+    for i in range(0, len(bloques_descifrados), 2):
+        # Unir el primer número con el segundo (dos dígitos cada vez)
+        if i+1 < len(bloques_descifrados):
+            grupo = f'{bloques_descifrados[i]}{bloques_descifrados[i+1]}'
+            bloques_descifrados_grupos.append(grupo)
+    print(f"Bloques descifrados y organizados: {bloques_descifrados_grupos}")
+
+    # Paso 5: Convertir los bloques de dos cifras en texto
+    mensaje_descifrado = CifrasATextoGamal(bloques_descifrados_grupos)
+    return mensaje_descifrado
 
 ############################## Menú ###############################
 def menuPrimos(): 
@@ -482,13 +552,10 @@ def menu():
 
     while True:
         print("1. Primos ")
-        print("2. Generar claves")
-        print("3. Transformar texto a cifras y cifras a texto")
-        print("4. Preparar numeros ")
-        print("5. Cifrar y descifrar numeros")
-        print("6. Cifrar y descifrar texto")
-        print("7. Cifrado y descifrao con firma ")
-        print("8. Salir")
+        print("2. Cifrado y descifrado sin firma")
+        print("3. Cifrado y descifrao con firma ")
+        print("4. Cifrado y descifrado con ElGamal")
+        print("5. Salir")
         op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
 
@@ -496,86 +563,83 @@ def menu():
             menuPrimos()
 
         elif op == 2: 
-            p = obtener_numero_entero("Introducir un valor para p (primo): ")
-            q = obtener_numero_entero("Introduce un valor para q(primo): ")
-            
+            texto = input("Introduce el texto a cifrar: ")
+            p = obtener_numero_entero("Introduce el valor de p (primo): ")
+            q = obtener_numero_entero("Introduce el valor de q (primo): ")
+
             if comprobar_primo(p) and comprobar_primo(q):
-                print(keygeneration(p, q))
+                pu, pri= keygeneration(p, q)
+        
+                texto = rsaciphertext(texto, pu)
+                print(f"Texto cifrado {texto}")
+
+                rsadeciphertext(texto, pri) 
+                print(f"Texto descifrado {rsadeciphertext(texto, pri)} \n")
             else: 
-                print("p y q deben de ser primos\n")
+                print("p y q deben ser primos\n")
 
         elif op == 3: 
-            texto=input("Introduce un texto a transformar: ")
-            cifras = TextoACifras(texto)
-            print(cifras)
-            print(CifrasATexto(cifras), "\n") #CIFRAS A TEXTO FUNCIONA SI ES UN VECTOR EL QUE LE LLEGA
+            texto = input("Introduce el texto a cifrar: ")
+            firma =input("Introduce la firma: ")
+
+            pa = obtener_numero_entero("Introduce un valor p para a: ")
+            qa = obtener_numero_entero("Introduce un valor q para a: ")
+
+            if comprobar_primo(pa) and comprobar_primo(qa):
+                pua, pria = keygeneration(pa, qa)
+
+                pb = obtener_numero_entero("\nIntroduce un valor p para b: ")
+                qb  = obtener_numero_entero("Introduce un valor q para b: ")
+
+                if comprobar_primo(pb) and comprobar_primo(qb):
+                    pub, prib = keygeneration(pb, qb)
+
+                    C1, C2 = rsaciphertextsign(pub, pria, texto, firma)
+                    print(f"Texto y firma cifrados: {C1} \n")
+                    print(f"Firma cifrada {C2} \n")
+
+                    # Descifrado y verificación¡
+                    mensaje_verificado, autenticado = rsadeciphertextsign(prib, pua, C1, C2)
+
+                    if autenticado:
+                        print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}\n")
+                    else:
+                        print("Fallo en la autenticación del mensaje.\n")
+                else: 
+                    print("p y q deben ser primos\n")
+            else: 
+                print("p y q deben ser primos\n")
+            
 
         elif op == 4: 
-            texto=input("Introduce un texto a transformar: ")
-            cifras = TextoACifras(texto)
-            n = obtener_numero_entero("Introduce n: ")
-            cadena = preparenumcipher(cifras, n)
-            print("bloque numeros preparao: ", cadena , "\n")
-
-            cadena = preparetextdecipher(cadena)
-            print("Cadena descifrada: ", cadena)
-            print("significado de la cadena: ", CifrasATexto(cadena), "\n")
+            q = obtener_numero_entero("Introduzca el valor de p (número primo): ")
+            g = obtener_numero_entero("Introduzca el valor de g (generador): ")
         
-        elif op == 5: 
-            texto="viernes"
-            cifras = TextoACifras(texto)
-            n = 3
-            cadena = preparenumcipher(cifras, n)
-            p = 643
-            q = 11
-            pu, pri= keygeneration(p, q)
-    
-            texto = rsacipher(cadena, pu)
-            print(texto)
+            if comprobar_primo(q): 
+                # Generar claves
+                clave_privada, clave_publica = ElGramal_keygeneration(q, g)
+                print(f"Clave privada: {clave_privada}, Clave pública: {clave_publica}")
+            
+                # Mensaje a cifrar
+                mensaje = input("Introduce el mensaje a cifrar: ")
+                print(f"Mensaje original: {mensaje}")
+            
+                # Cifrar
+                g_k, cifrado = CifradoElGramal(mensaje, q, g, clave_publica)
+                print(f"Mensaje cifrado: {cifrado}")
+            
+                # Descifrar
+                mensaje_descifrado = DescifradoElGramal(g_k, cifrado, q, clave_privada)
+                print(f"Mensaje descifrado: {mensaje_descifrado}\n")
+            
+            else: 
+                print("q tiene que ser primo\n")
 
-            texto1 = rsadecipher(texto, pri) 
-            print(texto1)
-
-            texto2 = preparetextdecipher(texto1)
-            print(texto2)
-            print(CifrasATexto(texto2), "\n")
-
-        elif op == 6: 
-            texto="viernes"
-            p = 643
-            q = 11
-            pu, pri= keygeneration(p, q)
-    
-            texto = rsaciphertext(texto, pu)
-            print(texto)
-
-            texto1 = rsadeciphertext(texto, pri) 
-            print(texto1)
-
-        elif op == 7: 
-            texto="prueba"
-            firma="bya"
-            pria = (143, 103)
-            pua = (143, 7)
-            pub = (1003, 3)
-            prib = (1003, 619)
-
-            C1, C2 = rsaciphertextsign(pub, pria, texto, firma)
-
-            # Descifrado y verificación¡
-            mensaje_verificado, autenticado = rsadeciphertextsign(prib, pua, C1, C2)
-            #rsadeciphertextsign(prib, pua, C1, C2)
-
-            if autenticado:
-                print(f"\nEl mensaje está autenticado: {CifrasATexto(mensaje_verificado)}")
-            else:
-                print("\nFallo en la autenticación del mensaje.")
-
-        elif op == 8:
+        elif op == 5:
             print("Saliendo del programa.\n")
             break
 
         else:
-            print("Opción no válida. Por favor, elige una opción entre 1 y 8.\n")
+            print("Opción no válida. Por favor, elige una opción entre 1 y 5.\n")
 
 menu()
