@@ -193,20 +193,12 @@ def powinverse(A, n):
                 for k in range(col_M1):
                     resultado[i][j] += M1[i][k] * M2[k][j] # Vamos rellenando la matriz resultado con los valores de la multiplicación
         return resultado
-
-    # Comparar matrices
-    def matrices_iguales(M1, M2):
-        for i in range(len(M1)):
-            for j in range(len(M1[0])):
-                if M1[i][j] == M2[i][j]: # Si los valores son iguales devolvemos true
-                    return True
-        return False
     
     potencia = I
     # Calcular potencias de A hasta el límite n
     for p in range(1, n + 1):
         potencia = multiplicar_matrices(potencia, A)  # Calcular A^p
-        if matrices_iguales(potencia, I): #allclose compara dos matrices
+        if np.allclose(potencia, I): #allclose compara dos matrices
             return p
     
     # Si no se encuentra una p
