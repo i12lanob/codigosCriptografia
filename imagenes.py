@@ -185,14 +185,7 @@ def powinverse(A, n):
             raise ValueError("Dimensiones incompatibles para multiplicación.")
 
         # Creamos la matriz resultado, rellena de 0, que se usará para luego la multiplicación
-        resultado = []
-        # Iteramos para crear fil_M1 filas
-        for _ in range(fil_M1):  
-            # Crear una fila con col_M2 ceros
-            fila = []  
-            for _ in range(col_M2):  
-                fila.append(0)  # Agregar un 0 a la fila
-            resultado.append(fila)
+        resultado = [[0 for _ in range(col_M2)] for _ in range(fil_M1)]
         
         # Calcular el producto matricial 
         for i in range(fil_M1):
