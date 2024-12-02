@@ -7,6 +7,7 @@
 ###################################################################
 import re
 from PIL import Image
+import numpy as np
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
@@ -168,6 +169,55 @@ def isinvertible(A, n):
     return False
 ########################### Ejercicio 2 ###########################
 #Función powinverse
+def powinverse(A, n):
+    # Asegurarse de que A es una matriz cuadrada
+    if A.shape[0] != A.shape[1]: # Shape devuelve las dimensiones de la matriz
+        raise ValueError("La matriz A debe ser cuadrada.")
+    
+    # Crear la matriz identidad
+    I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
+    
+    # Multiplicaicón de matrices
+    def multiplicar_matrices(M1, M2):
+        fil_M1, col_M1 = len(M1), len(M1[0])
+        fil_M2, col_M2 = len(M2), len(M2[0])
+        if col_M1 != fil_M2: # Primero comprobamos que se pueda calcular la multiplicación
+            raise ValueError("Dimensiones incompatibles para multiplicación.")
+
+        # Creamos la matriz resultado, rellena de 0, que se usará para luego la multiplicación
+        resultado = []
+        # Iteramos para crear fil_M1 filas
+        for _ in range(fil_M1):  
+            # Crear una fila con col_M2 ceros
+            fila = []  
+            for _ in range(col_M2):  
+                fila.append(0)  # Agregar un 0 a la fila
+            resultado.append(fila)
+        
+        # Calcular el producto matricial 
+        for i in range(fil_M1):
+            for j in range(col_M2):
+                for k in range(col_M1):
+                    resultado[i][j] += M1[i][k] * M2[k][j] # Vamos rellenando la matriz resultado con los valores de la multiplicación
+        return resultado
+
+    # Comparar matrices
+    def matrices_iguales(M1, M2):
+        for i in range(len(M1)):
+            for j in range(len(M1[0])):
+                if M1[i][j] == M2[i][j]: # Si los valores son iguales devolvemos true
+                    return True
+        return False
+    
+    potencia = I
+    # Calcular potencias de A hasta el límite n
+    for p in range(1, n + 1):
+        potencia = multiplicar_matrices(potencia, A)  # Calcular A^p
+        if matrices_iguales(potencia, I): #allclose compara dos matrices
+            return p
+    
+    # Si no se encuentra una p
+    return -1
 
 ########################### Ejercicio 3 ###########################
 #Función desordenaimagen
@@ -192,7 +242,8 @@ def menu():
         print("2. Comprobar si matriz es invertible")
         print("3. Cifrar un texto en una imagen")
         print("4. Descifrar un texto de una imagen")
-        print("5. Salir")
+        print("5. Primer invertible en la matriz")
+        print("6. Salir")
         op = int(input("Elige una de las opciones: "))
         print("\n")
 
@@ -233,7 +284,17 @@ def menu():
                     print(f"Error: {e}")
             else: 
                 print("Tiene que ser formato png\n")
-        elif op == 5:
+
+        elif op==5:
+            A =  np.array([[0, 1],[1, 0]])
+            n = obtener_numero_entero("Introduce un valor para n: ")
+            p =powinverse(A, n)
+            if p != -1: 
+                print(f"El primer p es: {p}\n")
+            else: 
+                print("No hay p\n")
+
+        elif op == 6:
             print("Saliendo del programa.\n")
             break
 
