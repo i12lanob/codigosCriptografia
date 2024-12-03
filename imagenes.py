@@ -32,6 +32,118 @@ def algeucl(a,b):
 def formatoImagen(imagen):
     return imagen.endswith(".png") #endswith mira el sufijo del texto
 
+#Funcion calcularDeterminante. 
+def calcularDeterminante(A):
+    # Matriz de 1x1
+    if len(A) == 1: 
+        return A[0][0]
+
+    # Matriz de 2x2
+    if len(A) == 2: 
+        return A[0][0] * A[1][1] - A[0][1] * A[1][0]
+
+    # Matriz mayor que 2x2
+    det = 0
+    for col in range(len(A)):
+        # Crear la submatriz sin la primera fila y sin la columna col
+        submatriz = []
+        for fila in range(1, len(A)):
+            nueva_fila = []
+            for columna in range(len(A[fila])):
+                if columna != col: 
+                    nueva_fila.append(A[fila][columna])
+            submatriz.append(nueva_fila)
+
+        # Signo: 1 si la columna es par, -1 si es impar
+        signo = 1 if col % 2 == 0 else -1
+
+        det += signo * A[0][col] * calcularDeterminante(submatriz) # Sumar el producto del signo, el elemento y el determinante de la submatriz
+
+    return det
+
+#Aunque en Python hay una forma más rápida de calcular las matrices inversas, vamos a utilizar las funciones de la práctica 1
+#Función InvModMatrix. Calcula la inversa de una matriz en el módulo n si existe.
+def InvModMatrix(A, n):
+
+    # Calcular determinante de la matriz A
+    det = calcularDeterminante(A)
+    det = det % n
+
+    #Función invmod. Inversa de p en n 
+    def invmod(p, n):
+        if p >= 0 and n > 0:
+            if algeucl(p, n) == 1:
+                # Algoritmo extendido de Euclides
+                a, b = n, p
+                x0, x1 = 0, 1
+                while b > 1:
+                    q = a // b
+                    a, b = b, a - q * b
+                    x0, x1 = x1, x0 - q * x1
+                if x1 < 0:
+                    x1 += n
+                return x1
+            
+    det_inv = invmod(det, n) # Calcular determinante inverso
+
+    #Función matrizTraspuesta
+    def matrizTraspuesta(A):
+
+        submatriz = []
+        for col in range(len(A)): 
+            nueva_fila = []
+            for fil in range(len(A)): 
+                nueva_fila.append(A[fil][col]) # Intercambiar las filas por columnas
+
+            submatriz.append(nueva_fila)
+
+        return submatriz
+    
+    traspuesta = matrizTraspuesta(A) 
+
+    #Función matrizAdjunta. 
+    def matrizAdjunta(A): 
+
+        adjunta = []
+        for fil in range(len(A)): # Empezar por la primera fila y primera columna
+            fila_adjunta = []
+            for col in range(len(A)):
+                submatriz = [] 
+                for f in range (len(A)):
+                    if f != fil:
+                        nueva_fila = []
+                        for c in range(len(A[f])):
+                            if c != col: # Crear una matriz con los elementos que no están en la fila fil y columna col 
+                                nueva_fila.append(A[f][c]) 
+
+                        submatriz.append(nueva_fila) # Introducir en la submatriz 
+
+                # Calcular el signo alternante para la adjunta
+                signo = 1 if (fil + col)%2 == 0 else -1
+
+                # Calcular el valor del cofactor teniendo en cuenta el signo y el determinante
+                cofactor = signo * calcularDeterminante(submatriz) 
+
+                # Añadir el cofactor a la fila adjunta
+                fila_adjunta.append(cofactor)
+
+            # Añadir la fila adjunta a la matriz de adjunta
+            adjunta.append(fila_adjunta)
+
+        return adjunta
+
+    adjunta = matrizAdjunta(traspuesta)
+
+    # Una vez obtenida la matriz adjunta se calcula la inversa modular
+    inversa_modular = []
+    for fila in adjunta:
+        fila_inversa = []
+        for elem in fila:
+            fila_inversa.append((det_inv * elem) % n)
+        inversa_modular.append(fila_inversa)
+
+    return inversa_modular
+    
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -80,7 +192,7 @@ def bittotext(cadena_bit):
 def LSBsimplecypher(image_path, message, output_path):
     # Cargar la imagen en modo de escala de grises
     img = Image.open(image_path).convert('L') # Carga la imagen con open() y la convierte a escala de grises con convert('L')
-    pixels = img.load() # Carga y devuelve una matriz bidimensional para poder modificar la 
+    pixels = img.load() # Carga y devuelve una matriz bidimensional para poder modificarla 
 
     # Convertir el mensaje a bits (usando las funciones proporcionadas)
     message_bits = ''.join(texttobit(message)) + '00000000'  # Añade un terminador nulo al final
@@ -89,7 +201,7 @@ def LSBsimplecypher(image_path, message, output_path):
     # Verificar si la imagen tiene suficientes píxeles para ocultar el mensaje
     width, height = img.size
     if message_length > width * height:
-        raise ValueError("La imagen es demasiado pequeña para ocultar el mensaje.")
+        raise ValueError("La imagen es demasiado pequeña para ocultar el mensaje.\n")
 
     # Modificar los primeros píxeles con los bits del mensaje
     bit_index = 0
@@ -111,7 +223,7 @@ def LSBsimplecypher(image_path, message, output_path):
 
     # Guardar la imagen modificada
     img.save(output_path)
-    print(f"Mensaje ocultado y guardado en {output_path}")
+    print(f"Mensaje ocultado y guardado en {output_path}\n")
     
 #Función LSBsimpledecypher
 def LSBsimpledecypher(image_path):
@@ -143,9 +255,11 @@ def LSBsimpledecypher(image_path):
 
     # Detenerse al encontrar el terminador nulo (00000000)
     if '\x00' in mensaje:
-        mensaje = mensaje.split('\x00')[0]  # Cortar el mensaje donde aparece el terminador
+        # Cortar el mensaje donde aparece el terminador
+        mensaje = mensaje.split('\x00')[0] # split divide la cadena mensaje en una lista de subcadenas
 
     return mensaje
+
 ########################### Ejercicio 4 ###########################
 #Función LSBcomplexcypher
 
@@ -156,49 +270,32 @@ def LSBsimpledecypher(image_path):
 ########################### Ejercicio 1 ###########################
 #Función isinvertible
 def isinvertible(A, n):
-
-    # Calcular determinante de la matriz A
-    det = A[0][0] * A[1][1] - A[0][1] * A[1][0]
+    width, heigth = A.shape # Shape devuelve las dimensiones de la matriz
+    if width != 2 or heigth != 2:
+        raise ValueError("La matriz debe ser 2x2\n") # Si no es una matriz cuadrada salta el error
+    
+    det = calcularDeterminante(A)
     det = det % n
 
     # Si el mcd==1 del determinante y de n entonces se puede calcular la inversa modular
-    if algeucl(n, det) == 1:
-        return True
-    
-    print("El valor n y el determinante de la matriz tienen que ser coprimos\n")
-    return False
+    return algeucl(n, det) == 1
+
 ########################### Ejercicio 2 ###########################
 #Función powinverse
 def powinverse(A, n):
     # Asegurarse de que A es una matriz cuadrada
     if A.shape[0] != A.shape[1]: # Shape devuelve las dimensiones de la matriz
-        raise ValueError("La matriz A debe ser cuadrada.")
+        raise ValueError("La matriz A debe ser cuadrada.\n")
     
     # Crear la matriz identidad
     I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
     
-    # Multiplicaicón de matrices
-    def multiplicar_matrices(M1, M2):
-        fil_M1, col_M1 = len(M1), len(M1[0])
-        fil_M2, col_M2 = len(M2), len(M2[0])
-        if col_M1 != fil_M2: # Primero comprobamos que se pueda calcular la multiplicación
-            raise ValueError("Dimensiones incompatibles para multiplicación.")
-
-        # Creamos la matriz resultado, rellena de 0, que se usará para luego la multiplicación
-        resultado = [[0 for _ in range(col_M2)] for _ in range(fil_M1)]
-        
-        # Calcular el producto matricial 
-        for i in range(fil_M1):
-            for j in range(col_M2):
-                for k in range(col_M1):
-                    resultado[i][j] += M1[i][k] * M2[k][j] # Vamos rellenando la matriz resultado con los valores de la multiplicación
-        return resultado
-    
     potencia = I
+
     # Calcular potencias de A hasta el límite n
     for p in range(1, n + 1):
-        potencia = multiplicar_matrices(potencia, A)  # Calcular A^p
-        if np.allclose(potencia, I): #allclose compara dos matrices
+        potencia = np.dot(potencia, A)  # Calcular A^p. dot calcula el producto matricial 
+        if np.allclose(potencia, I): # allclose compara dos matrices
             return p
     
     # Si no se encuentra una p
@@ -206,8 +303,49 @@ def powinverse(A, n):
 
 ########################### Ejercicio 3 ###########################
 #Función desordenaimagen
+def desordenaimagen(A, imagen, output_path):
+    # Cargar la imagen en modo de escala de grises
+    img = Image.open(imagen).convert('L') # Carga la imagen con open() y la convierte a escala de grises con convert('L')
+    matriz_imagen = np.array(img) # Convertir a array la imagen 
 
-#Función ordenaimgane
+    fil, col = matriz_imagen.shape # Cogemos las dimensiones de la imagen para comprobar si es cuadrada
+    if fil != col: # Comprobamos si es una imagen cuadrada
+        raise Exception("La imagen no tiene una dimensión cuadrada\n")
+    
+    # Comprobamos si la matriz es invertible mod nn (fil)
+    if not isinvertible(A, fil): # Cogemos fil pero puede ser también col, ya que tienen que tener el mismo valor
+        raise Exception("La matriz no es invertible\n")
+
+     # Crear una nueva matriz para almacenar la imagen desordenada
+    desordenada = np.zeros_like(matriz_imagen) # Rellena de 0 la matriz
+
+    for i in range(fil):
+        for j in range(col):
+            # Coordenada original
+            coord = np.array([i, j])
+            # Transformación de coordenadas
+            nueva_coord = np.dot(A, coord) % fil # dot es el producto matricial
+
+            # Asegurarse de que las nuevas coordenadas estén dentro del rango
+            x, y = nueva_coord
+            if 0 <= x < fil and 0 <= y < col:
+                desordenada[x, y] = matriz_imagen[i, j]
+
+    # Guardamos esta nueva imagen desordenada
+    img_desordenada = Image.fromarray(desordenada) # fromarray convierte de array a imagen
+    img_desordenada.save(output_path)
+    print("Se ha realizado con exito\n")
+
+#Función ordenaimagen.
+def ordenaimagen(A, imagen, output_path):
+    img = Image.open(imagen) # Abrimos la imagen
+    n = np.array(img).shape[0]
+
+    # Calculamos la inversa de A en mod n, usando funciones que hemos definido en prácticas anteriores
+    A_inv = np.array(InvModMatrix(A,n))  # np.array para pasar una lista a un array Numpy
+
+    # Una vez calculamos la inversa llamamos la función desordenaimagen, con la inversa de la matriz
+    return desordenaimagen(A_inv, imagen, output_path) 
 
 ########################### Ejercicio 4 ###########################
 #Función desordenaimagenite
@@ -224,12 +362,13 @@ def menu():
 
     while True:
         print("1. Texto a binario")
-        print("2. Comprobar si matriz es invertible")
-        print("3. Cifrar un texto en una imagen")
-        print("4. Descifrar un texto de una imagen")
-        print("5. Primer invertible en la matriz")
-        print("6. Salir")
-        op = int(input("Elige una de las opciones: "))
+        print("2. Cifrar un texto en una imagen")
+        print("3. Descifrar un texto de una imagen")
+        print("4. Primer invertible en la matriz")
+        print("5. Desordenar imagen")
+        print("6. Ordenar imagen")
+        print("7. Salir")
+        op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
 
         if op == 1: 
@@ -237,19 +376,13 @@ def menu():
             cadena = texttobit(texto)
             print(f"La cadena {texto} es: {cadena}\n")
             print(f"La cadena {bittotext(cadena)}\n")
-        elif op == 2:
-            matriz = [[2 , 2] , [2 , 2]]
-            n = 4
-            if isinvertible(matriz, n): 
-                print("Es invertible\n")
 
-        elif op== 3:
+        elif op== 2:
             image_path = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
             if formatoImagen(image_path):
                 message = input("Ingrese el mensaje que desea ocultar: ")
-
+                output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
                 if formatoImagen(output_path):
-                    output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
                     try:
                         LSBsimplecypher(image_path, message, output_path)
                     except Exception as e:
@@ -259,7 +392,7 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
         
-        elif op == 4:
+        elif op == 3:
             image_path = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
             if formatoImagen(image_path):
                 try:
@@ -270,7 +403,7 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op==5:
+        elif op == 4:
             A =  np.array([[0, 1],[1, 0]])
             n = obtener_numero_entero("Introduce un valor para n: ")
             p =powinverse(A, n)
@@ -279,7 +412,33 @@ def menu():
             else: 
                 print("No hay p\n")
 
-        elif op == 6:
+        elif op == 5:
+            image_path = input("Ingrese el nombre de la imagen a desordenar (ej. imagen.png): ")
+            if formatoImagen(image_path):
+                output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
+                if formatoImagen(output_path):
+                    #A = np.array([[2,1], [1,1]])
+                    A = np.array([[1,5], [2,3]])
+                    desordenaimagen(A, image_path, output_path)
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
+
+        elif op == 6: 
+            image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
+            if formatoImagen(image_path):
+                output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
+                if formatoImagen(output_path):
+                    #A = np.array([[2,1], [1,1]])
+                    A = np.array([[1,5], [2,3]])
+                    ordenaimagen(A, image_path, output_path)
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
+
+        elif op == 7:
             print("Saliendo del programa.\n")
             break
 
