@@ -270,7 +270,7 @@ def LSBsimpledecypher(image_path):
 ########################### Ejercicio 1 ###########################
 #Función isinvertible
 def isinvertible(A, n):
-    width, heigth = A.shape # Shape devuelve las dimensiones de la matriz
+    width, heigth = A.shape # Shape devuelº ve las dimensiones de la matriz
     if width != 2 or heigth != 2:
         raise ValueError("La matriz debe ser 2x2\n") # Si no es una matriz cuadrada salta el error
     
@@ -312,7 +312,7 @@ def desordenaimagen(A, imagen, output_path):
     if fil != col: # Comprobamos si es una imagen cuadrada
         raise Exception("La imagen no tiene una dimensión cuadrada\n")
     
-    # Comprobamos si la matriz es invertible mod nn (fil)
+    # Comprobamos si la matriz es invertible mod n (fil)
     if not isinvertible(A, fil): # Cogemos fil pero puede ser también col, ya que tienen que tener el mismo valor
         raise Exception("La matriz no es invertible\n")
 
@@ -324,8 +324,8 @@ def desordenaimagen(A, imagen, output_path):
             # Coordenada original
             coord = np.array([i, j])
             # Transformación de coordenadas
-            nueva_coord = np.dot(A, coord) % fil # dot es el producto matricial
-
+            #nueva_coord = np.dot(A, coord) % fil # dot es el producto matricial
+            nueva_coord = np.rint(np.dot(A, coord) % fil).astype(int)  # Redondear y convertir a entero
             # Asegurarse de que las nuevas coordenadas estén dentro del rango
             x, y = nueva_coord
             if 0 <= x < fil and 0 <= y < col:
@@ -349,8 +349,42 @@ def ordenaimagen(A, imagen, output_path):
 
 ########################### Ejercicio 4 ###########################
 #Función desordenaimagenite
+def desordenaimagenite(A, k, imagen, output_path):
+    if isinvertible(A, k):
+        img = Image.open(imagen)
+        n = np.array(img).shape[0] 
+        
+        I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
+        
+        potencia = I
 
-#Función ordenaimagenite
+        # Calcular potencias de A hasta el límite n
+        for p in range(1, k + 1):
+            potencia = np.dot(potencia, A)  # Calcular A^k. dot calcula el producto matricial 
+
+        desordenaimagen(potencia, imagen, output_path)
+
+#Función ordenaimagenite.
+def ordenaimagenite(A, k, imagen, output_path):
+    img = Image.open(imagen) # Abrimos la imagen
+    n = np.array(img).shape[0]
+
+    I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
+        
+    potencia = I
+
+    # Calcular potencias de A hasta el límite n
+    for p in range(1, k + 1):
+        potencia = np.dot(potencia, A) % n # Calcular A^k mod n. dot calcula el producto matricial 
+
+    if not isinvertible(potencia, n):
+        raise ValueError("La matriz A^k no es invertible en mod n")
+    
+    # Calculamos la inversa de A en mod n, usando funciones que hemos definido en prácticas anteriores
+    A_inv = np.array(InvModMatrix(potencia,n))  # np.array para pasar una lista a un array Numpy
+
+    # Una vez calculamos la inversa llamamos la función desordenaimagen, con la inversa de la matriz
+    return desordenaimagen(A_inv, imagen, output_path) 
 
 ########################### Ejercicio 5 ###########################
 #Función desordenaimagenproceso
@@ -367,7 +401,9 @@ def menu():
         print("4. Primer invertible en la matriz")
         print("5. Desordenar imagen")
         print("6. Ordenar imagen")
-        print("7. Salir")
+        print("7. Desordena con k")
+        print("8. Ordena con k")
+        print("9. Salir")
         op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
 
@@ -379,29 +415,29 @@ def menu():
 
         elif op== 2:
             image_path = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
-            if formatoImagen(image_path):
-                message = input("Ingrese el mensaje que desea ocultar: ")
-                output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
-                if formatoImagen(output_path):
-                    try:
-                        LSBsimplecypher(image_path, message, output_path)
-                    except Exception as e:
-                        print(f"Error: {e}")
-                else: 
-                    print("Tiene que ser formato png\n")
-            else: 
-                print("Tiene que ser formato png\n")
+            #if formatoImagen(image_path):
+            message = input("Ingrese el mensaje que desea ocultar: ")
+            output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
+            #if formatoImagen(output_path):
+            try:
+                LSBsimplecypher(image_path, message, output_path)
+            except Exception as e:
+                print(f"Error: {e}")
+            #else: 
+            #        print("Tiene que ser formato png\n")
+            #else: 
+            #    print("Tiene que ser formato png\n")
         
         elif op == 3:
             image_path = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
-            if formatoImagen(image_path):
-                try:
-                    mensaje_recuperado = LSBsimpledecypher(image_path)
-                    print(f"Mensaje recuperado: {mensaje_recuperado}")
-                except Exception as e:
-                    print(f"Error: {e}")
-            else: 
-                print("Tiene que ser formato png\n")
+            #if formatoImagen(image_path):
+            try:
+                mensaje_recuperado = LSBsimpledecypher(image_path)
+                print(f"Mensaje recuperado: {mensaje_recuperado}")
+            except Exception as e:
+                print(f"Error: {e}")
+            #else: 
+            #    print("Tiene que ser formato png\n")
 
         elif op == 4:
             A =  np.array([[0, 1],[1, 0]])
@@ -438,7 +474,37 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 7:
+        elif op == 7: 
+            image_path = input("Ingrese el nombre de la imagen  a desordenadar (ej. imagen.png): ")
+            if formatoImagen(image_path):
+                output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
+                if formatoImagen(output_path):
+                    #A = np.array([[2,1], [1,1]])
+                    #k = obtener_numero_entero("Introduce un valor para k: ")
+                    k = 10
+                    A = np.array([[1,5], [2,3]])
+                    desordenaimagenite(A, k, image_path, output_path)
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
+
+        elif op == 8: 
+            image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
+            if formatoImagen(image_path):
+                output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
+                if formatoImagen(output_path):
+                    #A = np.array([[2,1], [1,1]])
+                    #k = obtener_numero_entero("Introduce un valor para k: ")
+                    k = 10
+                    A = np.array([[1,5], [2,3]])
+                    ordenaimagenite(A, k, image_path, output_path)
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
+
+        elif op == 9:
             print("Saliendo del programa.\n")
             break
 
