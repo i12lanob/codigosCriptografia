@@ -32,6 +32,7 @@ def algeucl(a,b):
 def formatoImagen(imagen):
     return imagen.endswith(".png") #endswith mira el sufijo del texto
 
+#Funcion calcularDeterminante. 
 def calcularDeterminante(A):
     # Matriz de 1x1
     if len(A) == 1: 
@@ -142,6 +143,7 @@ def InvModMatrix(A, n):
         inversa_modular.append(fila_inversa)
 
     return inversa_modular
+    
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -187,56 +189,57 @@ def bittotext(cadena_bit):
 
 ########################### Ejercicio 3 ###########################
 #Función LSBsimplecypher
-def LSBsimplecypher(ruta_entrada, message, ruta_salida):
+def LSBsimplecypher(image_path, message, output_path):
     # Cargar la imagen en modo de escala de grises
-    img = Image.open(ruta_entrada).convert('L') # Carga la imagen con open() y la convierte a escala de grises con convert('L')
-    pixels = img.load() # Carga y devuelve una matriz bidimensional para poder modificar la 
+    img = Image.open(image_path).convert('L') # Carga la imagen con open() y la convierte a escala de grises con convert('L')
+    pixels = img.load() # Carga y devuelve una matriz bidimensional para poder modificarla 
 
     # Convertir el mensaje a bits (usando las funciones proporcionadas)
-    bits_mensaje = ''.join(texttobit(message)) + '00000000'  # Añade un terminador nulo al final
-    longitud_mensaje = len(bits_mensaje)
+    message_bits = ''.join(texttobit(message)) + '00000000'  # Añade un terminador nulo al final
+    message_length = len(message_bits)
 
     # Verificar si la imagen tiene suficientes píxeles para ocultar el mensaje
-    anchura, altura = img.size
-    if longitud_mensaje > anchura * altura:
-        raise ValueError("La imagen es demasiado pequeña para ocultar el mensaje.")
+    width, height = img.size
+    if message_length > width * height:
+        raise ValueError("La imagen es demasiado pequeña para ocultar el mensaje.\n")
 
     # Modificar los primeros píxeles con los bits del mensaje
     bit_index = 0
-    for y in range(altura):
-        for x in range(anchura):
-            if bit_index < longitud_mensaje:
+    for y in range(height):
+        for x in range(width):
+            if bit_index < message_length:
                 # Obtener el valor del píxel
-                valor_pixel = pixels[x, y]  
+                pixel_value = pixels[x, y]  
                 # Convertir el bit actual del mensaje a entero (0 o 1)
-                bit_actual = int(bits_mensaje[bit_index])
+                bit_actual = int(message_bits[bit_index])
                 # Si el bit es 1, forzamos el LSB a 1. Si es 0, forzamos el LSB a 0.
                 if bit_actual == 1:
-                    nuevo_valor_pixel = valor_pixel | 1  # Fuerza el LSB a 1
+                    new_pixel_value = pixel_value | 1  # Fuerza el LSB a 1
                 else:
-                    nuevo_valor_pixel = valor_pixel & 0  # Fuerza el LSB a 0
+                    new_pixel_value = pixel_value & ~1  # Fuerza el LSB a 0
                 # Actualizar el valor del píxel
-                pixels[x, y] = nuevo_valor_pixel
+                pixels[x, y] = new_pixel_value
                 bit_index += 1
 
     # Guardar la imagen modificada
-    img.save(ruta_salida)
-    print(f"Mensaje ocultado y guardado en {ruta_salida}")
+    img.save(output_path)
+    print(f"Mensaje ocultado y guardado en {output_path}\n")
     
 #Función LSBsimpledecypher
-def LSBsimpledecypher(ruta_entrada):
+def LSBsimpledecypher(image_path):
+
     # Cargar la imagen en escala de grises
-    img = Image.open(ruta_entrada).convert('L')
+    img = Image.open(image_path).convert('L')
     pixels = img.load()
 
     # Extraer los bits del LSB de los píxeles
-    anchura, altura = img.size
+    width, height = img.size
     bits = ''
-    for y in range(altura):
-        for x in range(anchura):
-            valor_pixel = pixels[x, y]
+    for y in range(height):
+        for x in range(width):
+            pixel_value = pixels[x, y]
             # Añadir el LSB del píxel a la cadena de bits
-            bits += str(valor_pixel & 1)
+            bits += str(pixel_value & 1)
 
     # Convertir los bits en grupos de 8
     mensaje_bits = []
@@ -252,9 +255,11 @@ def LSBsimpledecypher(ruta_entrada):
 
     # Detenerse al encontrar el terminador nulo (00000000)
     if '\x00' in mensaje:
-        mensaje = mensaje.split('\x00')[0]  # Cortar el mensaje donde aparece el terminador
+        # Cortar el mensaje donde aparece el terminador
+        mensaje = mensaje.split('\x00')[0] # split divide la cadena mensaje en una lista de subcadenas
 
     return mensaje
+
 ########################### Ejercicio 4 ###########################
 #Función LSBcomplexcypher
 def LSBcomplexcypher(ruta_entrada, message, ruta_salida, s):
@@ -332,17 +337,16 @@ def LSBcomplexdecypher(ruta_entrada, s):
 ########################### Ejercicio 1 ###########################
 #Función isinvertible
 def isinvertible(A, n):
-
-    # Calcular determinante de la matriz A
-    det = A[0][0] * A[1][1] - A[0][1] * A[1][0]
+    width, heigth = A.shape # Shape devuelº ve las dimensiones de la matriz
+    if width != 2 or heigth != 2:
+        raise ValueError("La matriz debe ser 2x2\n") # Si no es una matriz cuadrada salta el error
+    
+    det = calcularDeterminante(A)
     det = det % n
 
     # Si el mcd==1 del determinante y de n entonces se puede calcular la inversa modular
-    if algeucl(n, det) == 1:
-        return True
-    
-    print("El valor n y el determinante de la matriz tienen que ser coprimos\n")
-    return False
+    return algeucl(n, det) == 1
+
 ########################### Ejercicio 2 ###########################
 #Función powinverse
 def powinverse(A, n):
@@ -375,7 +379,7 @@ def desordenaimagen(A, imagen, output_path):
     if fil != col: # Comprobamos si es una imagen cuadrada
         raise Exception("La imagen no tiene una dimensión cuadrada\n")
     
-    # Comprobamos si la matriz es invertible mod nn (fil)
+    # Comprobamos si la matriz es invertible mod n (fil)
     if not isinvertible(A, fil): # Cogemos fil pero puede ser también col, ya que tienen que tener el mismo valor
         raise Exception("La matriz no es invertible\n")
 
@@ -387,8 +391,8 @@ def desordenaimagen(A, imagen, output_path):
             # Coordenada original
             coord = np.array([i, j])
             # Transformación de coordenadas
-            nueva_coord = np.dot(A, coord) % fil # dot es el producto matricial
-
+            #nueva_coord = np.dot(A, coord) % fil # dot es el producto matricial
+            nueva_coord = np.rint(np.dot(A, coord) % fil).astype(int)  # Redondear y convertir a entero
             # Asegurarse de que las nuevas coordenadas estén dentro del rango
             x, y = nueva_coord
             if 0 <= x < fil and 0 <= y < col:
@@ -398,7 +402,8 @@ def desordenaimagen(A, imagen, output_path):
     img_desordenada = Image.fromarray(desordenada) # fromarray convierte de array a imagen
     img_desordenada.save(output_path)
     print("Se ha realizado con exito\n")
-#Función ordenaimgane
+
+#Función ordenaimagen.
 def ordenaimagen(A, imagen, output_path):
     img = Image.open(imagen) # Abrimos la imagen
     n = np.array(img).shape[0]
@@ -411,117 +416,72 @@ def ordenaimagen(A, imagen, output_path):
 
 ########################### Ejercicio 4 ###########################
 #Función desordenaimagenite
-def desordenaimagenite(A, imagen, output_path):
-    # Cargar la imagen en modo de escala de grises
-    img = Image.open(imagen).convert('L')
-    matriz_imagen = np.array(img)
-    
-    fil, col = matriz_imagen.shape  # Dimensiones de la imagen
-    
-    if fil != col:
-        raise Exception("La imagen no tiene una dimensión cuadrada\n")
-    
-    n = fil  # Usamos el tamaño de la imagen como n
-    
-    # Encontrar valores válidos de k (de 1 a n) tales que A^k sea invertible
-    valid_k_values = []
-    for k in range(1, n + 1):
-        A_k = np.linalg.matrix_power(A, k) % n
-        if isinvertible(A_k, n):  # Llamamos a la función isinvertible para verificar si A^k es invertible
-            valid_k_values.append(k)
-    
-    # Informar al usuario los valores válidos de k
-    if valid_k_values:
-        print(f"Los valores válidos de k para los cuales A^k es invertible son: {valid_k_values}")
-    else:
-        print("No se han encontrado valores de k para los cuales A^k sea invertible.")
-        return
-    
-    # Pedir al usuario un valor k válido
-    while True:
-        try:
-            k = int(input(f"Introduce un valor entero k para calcular A^k (elige entre {valid_k_values}): "))
-            if k not in valid_k_values:
-                print(f"Por favor, introduce un número entero válido entre {valid_k_values}.")
-                continue
-            break
-        except ValueError:
-            print("Entrada no válida. Por favor, introduce un número entero.")
-    
-    # Calculamos A^k
-    A_k = np.linalg.matrix_power(A, k) % n  # A^k módulo n
-    
-    # Verificamos si A^k es invertible
-    if not isinvertible(A_k, n):
-        raise Exception(f"A^k no es invertible para k={k}")
-    
-    # Crear una nueva matriz para almacenar la imagen desordenada
-    desordenada = np.zeros_like(matriz_imagen)
-
-    # Transformar las coordenadas de la imagen utilizando A^k
-    for i in range(fil):
-        for j in range(col):
-            coord = np.array([i, j])
-            nueva_coord = np.dot(A_k, coord) % n  # Transformación de las coordenadas
-            x, y = nueva_coord
-            if 0 <= x < fil and 0 <= y < col:
-                desordenada[x, y] = matriz_imagen[i, j]
-
-    # Guardamos la nueva imagen desordenada
-    img_desordenada = Image.fromarray(desordenada)
-    img_desordenada.save(output_path)
-    print(f"Imagen desordenada con A^{k} guardada en {output_path}")
-
-#Función ordenaimagenite
-def ordenaimagenite(A, imagen, output_path):
-    # Cargar la imagen desordenada
-    img = Image.open(imagen)
-    n = np.array(img).shape[0]  # Obtener el tamaño de la imagen (suponemos que es cuadrada)
-    
-    # Pedir al usuario el valor de k usado para desordenar la imagen
-    while True:
-        try:
-            k = int(input("Introduce el valor de k usado para desordenar la imagen: "))
-            if k <= 0:
-                print("Por favor, introduce un número entero positivo.")
-                continue
-            
-            # Calculamos A^k
-            A_k = np.linalg.matrix_power(A, k) % n
-            
-            # Ahora calculamos la inversa de A^k módulo n
-            if isinvertible(A_k, n):  # Verifica que A^k es invertible
-                A_k_inv = InvModMatrix(A_k, n)  # Usa InvModMatrix o la función adecuada para la inversa modular
-                # Llamamos a la función desordenaimagenite con A^k_inv
-                desordenaimagenite(A_k_inv, imagen, output_path)
-                break
-            else:
-                print(f"A^k no es invertible para k={k}. Intenta otro valor.")
+def desordenaimagenite(A, k, imagen, output_path):
+    if isinvertible(A, k):
+        img = Image.open(imagen)
+        n = np.array(img).shape[0] 
         
-        except ValueError:
-            print("Entrada no válida. Por favor, introduce un número entero.")
+        I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
+        
+        potencia = I
+
+        # Calcular potencias de A hasta el límite n
+        for p in range(1, k + 1):
+            potencia = np.dot(potencia, A)  # Calcular A^k. dot calcula el producto matricial 
+
+        desordenaimagen(potencia, imagen, output_path)
+
+#Función ordenaimagenite.
+def ordenaimagenite(A, k, imagen, output_path):
+    img = Image.open(imagen) # Abrimos la imagen
+    n = np.array(img).shape[0]
+
+    I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
+        
+    potencia = I
+
+    # Calcular potencias de A hasta el límite n
+    for p in range(1, k + 1):
+        potencia = np.dot(potencia, A) % n # Calcular A^k mod n. dot calcula el producto matricial 
+
+    if not isinvertible(potencia, n):
+        raise ValueError("La matriz A^k no es invertible en mod n")
+    
+    # Calculamos la inversa de A en mod n, usando funciones que hemos definido en prácticas anteriores
+    A_inv = np.array(InvModMatrix(potencia,n))  # np.array para pasar una lista a un array Numpy
+
+    # Una vez calculamos la inversa llamamos la función desordenaimagen, con la inversa de la matriz
+    return desordenaimagen(A_inv, imagen, output_path) 
+
 ########################### Ejercicio 5 ###########################
 #Función desordenaimagenproceso
+def desordenaimagenproceso(A, k_values, image_path):
+    if not formatoImagen(image_path):
+        print("La imagen debe estar en formato PNG.\n")
+        return
 
-#Función desordenaimagenite
-
+    # Iterar por cada valor de k y desordenar la imagen
+    for k in k_values:
+        output_path = f"{image_path}desordenada_k{k}.png"  # Crear un nombre de archivo dinámico para cada k
+        print(f"Generando imagen con k={k}, guardando como {output_path}")
+        desordenaimagenite(A, k, image_path, output_path)
 ############################## Menú ###############################
 def menu():
 
     while True:
         print("1. Texto a binario")
-        print("2. Comprobar si matriz es invertible")
-        print("3. Cifrar un texto en una imagen")
-        print("4. Descifrar un texto de una imagen")
-        print("5. Cifrar un mensaje en una imagen LSB Complex")
-        print("6. Descifrar un mensaje de una imagen LSB Complex")
-        print("7. Primer invertible en la matriz")
-        print("8. Desordenar imagen")
-        print("9. Ordenar imagen")
-        print("10.Desordenar imagen K")
-        print("11.Ordenar imagen K")
+        print("2. Cifrar un texto en una imagen")
+        print("3. Descifrar un texto de una imagen")
+        print("4. Cifrar un mensaje en una imagen LSB Complex")
+        print("5. Descifrar un mensaje de una imagen LSB Complex")
+        print("6. Primer invertible en la matriz")
+        print("7. Desordenar imagen")
+        print("8. Ordenar imagen")
+        print("9. Desordena con k")
+        print("10. Ordena con k")
+        print("11. Desordenar con todos los k")
         print("12. Salir")
-        op = int(input("Elige una de las opciones: "))
+        op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
 
         if op == 1: 
@@ -529,39 +489,34 @@ def menu():
             cadena = texttobit(texto)
             print(f"La cadena {texto} es: {cadena}\n")
             print(f"La cadena {bittotext(cadena)}\n")
-        elif op == 2:
-            matriz = [[2 , 2] , [2 , 2]]
-            n = 4
-            if isinvertible(matriz, n): 
-                print("Es invertible\n")
 
-        elif op== 3:
-            ruta_entrada = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
-            if formatoImagen(ruta_entrada):
-                message = input("Ingrese el mensaje que desea ocultar: ")
-                ruta_salida = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
-                if formatoImagen(ruta_salida):
-                    try:
-                        LSBsimplecypher(ruta_entrada, message, ruta_salida)
-                    except Exception as e:
-                        print(f"Error: {e}")
-                else: 
-                    print("Tiene que ser formato png\n")
-            else: 
-                print("Tiene que ser formato png\n")
+        elif op== 2:
+            image_path = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
+            #if formatoImagen(image_path):
+            message = input("Ingrese el mensaje que desea ocultar: ")
+            output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
+            #if formatoImagen(output_path):
+            try:
+                LSBsimplecypher(image_path, message, output_path)
+            except Exception as e:
+                print(f"Error: {e}")
+            #else: 
+            #        print("Tiene que ser formato png\n")
+            #else: 
+            #    print("Tiene que ser formato png\n")
         
-        elif op == 4:
-            ruta_entrada = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
-            if formatoImagen(ruta_entrada):
-                try:
-                    mensaje_recuperado = LSBsimpledecypher(ruta_entrada)
-                    print(f"Mensaje recuperado: {mensaje_recuperado}")
-                except Exception as e:
-                    print(f"Error: {e}")
-            else: 
-                print("Tiene que ser formato png\n")
+        elif op == 3:
+            image_path = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
+            #if formatoImagen(image_path):
+            try:
+                mensaje_recuperado = LSBsimpledecypher(image_path)
+                print(f"Mensaje recuperado: {mensaje_recuperado}")
+            except Exception as e:
+                print(f"Error: {e}")
+            #else: 
+            #    print("Tiene que ser formato png\n")
 
-        elif op == 5:
+        elif op == 4:
             ruta_entrada = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
             message = input("Ingrese el mensaje que desea ocultar: ")
             ruta_salida = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
@@ -571,7 +526,7 @@ def menu():
             except Exception as e:
                 print(f"Error: {e}")
 
-        elif op == 6:
+        elif op == 5:
             ruta_entrada = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
             s = int(input("Ingrese el valor de salto (s): "))
             try:
@@ -579,8 +534,7 @@ def menu():
                 print(f"Mensaje recuperado: {mensaje_recuperado}")
             except Exception as e:
                 print(f"Error: {e}")
-        
-        elif op == 7:
+        elif op == 6:
             A =  np.array([[0, 1],[1, 0]])
             n = obtener_numero_entero("Introduce un valor para n: ")
             p =powinverse(A, n)
@@ -589,7 +543,7 @@ def menu():
             else: 
                 print("No hay p\n")
 
-        elif op == 8:
+        elif op == 7:
             image_path = input("Ingrese el nombre de la imagen a desordenar (ej. imagen.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
@@ -602,7 +556,7 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 9: 
+        elif op == 8: 
             image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
@@ -615,37 +569,46 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 10:  # Supongamos que esta es la nueva opción para desordenaimagenite
-            image_path = input("Ingrese el nombre de la imagen a desordenar con potencia k (ej. imagen.png): ")
+        elif op == 9: 
+            image_path = input("Ingrese el nombre de la imagen  a desordenadar (ej. imagen.png): ")
             if formatoImagen(image_path):
-                output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada_k.png): ")
+                output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
                 if formatoImagen(output_path):
-                    # Puedes cambiar la matriz según tus necesidades
-                    A = np.array([[1, 1], [1, 2]])  
-                    try:
-                        desordenaimagenite(A, image_path, output_path)
-                    except Exception as e:
-                        print(f"Error: {e}")
-                else:
-                    print("El nombre de salida debe tener formato png.\n")
-            else:
-                print("El nombre de entrada debe tener formato png.\n")
+                    #A = np.array([[2,1], [1,1]])
+                    #k = obtener_numero_entero("Introduce un valor para k: ")
+                    k = 10
+                    A = np.array([[1,5], [2,3]])
+                    desordenaimagenite(A, k, image_path, output_path)
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
 
-        elif op == 11:  # Nueva opción para ordenar la imagen usando A^k
+        elif op == 19: 
             image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
                 if formatoImagen(output_path):
-                    # Define la matriz A que fue utilizada para desordenar
-                    A = np.array([[1, 1], [1, 2]])
-                    try:
-                        ordenaimagenite(A, image_path, output_path)
-                    except Exception as e:
-                        print(f"Error: {e}")
-                else:
-                    print("El nombre de salida debe tener formato png.\n")
+                    #A = np.array([[2,1], [1,1]])
+                    #k = obtener_numero_entero("Introduce un valor para k: ")
+                    k = 10
+                    A = np.array([[1,5], [2,3]])
+                    ordenaimagenite(A, k, image_path, output_path)
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
+        elif op == 11:
+            image_path = input("Ingrese el nombre de la imagen a desordenar segun todas las k (ej. imagen.png): ")
+            if formatoImagen(image_path):
+                # Matriz A y valores de k
+                A = np.array([[1, 5], [2, 3]])
+                k_values = [1,2,4,10]  # Valores de k que quieres usar
+                desordenaimagenproceso(A, k_values, image_path)
             else:
-                print("El nombre de entrada debe tener formato png.\n")
+                print("La imagen debe estar en formato PNG.\n")
+
+
         elif op == 12:
             print("Saliendo del programa.\n")
             break
