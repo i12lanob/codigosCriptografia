@@ -143,7 +143,57 @@ def InvModMatrix(A, n):
         inversa_modular.append(fila_inversa)
 
     return inversa_modular
+
+def calcular_valores_validos_k(A, n):
+    """
+    Calcula los valores de k para los cuales A^k es invertible módulo n.
     
+    Args:
+        A (np.array): Matriz cuadrada que se usará para calcular A^k.
+        n (int): Dimensión de la imagen.
+    
+    Returns:
+        list: Lista de valores válidos de k.
+    """
+    valores_validos = []
+    Ak = np.eye(A.shape[0], dtype=int)  # Inicializar A^k como la identidad
+    for k in range(1, n + 1):
+        Ak = np.dot(Ak, A) % n  # Calcular A^k módulo n
+        if isinvertible(Ak, n):  # Verificar si A^k es invertible módulo n
+            valores_validos.append(k)
+    return valores_validos
+
+
+def solicitar_k_valido(A, n):
+    """
+    Solicita al usuario un valor de k de entre los valores válidos calculados.
+    
+    Args:
+        A (np.array): Matriz cuadrada.
+        n (int): Dimensión de la imagen.
+    
+    Returns:
+        int: Un valor de k válido elegido por el usuario.
+    """
+    # Calcular valores válidos de k
+    print("Calculando valores válidos de k...")
+    valores_validos = calcular_valores_validos_k(A, n)
+    
+    if not valores_validos:
+        raise ValueError("No hay valores de k válidos para los cuales A^k sea invertible.")
+    
+    print(f"Valores válidos de k encontrados: {valores_validos}")
+    
+    # Solicitar al usuario elegir un valor de k
+    while True:
+        try:
+            k = int(input(f"Seleccione un valor de k de la lista anterior ({valores_validos[0]}-{valores_validos[-1]}): "))
+            if k in valores_validos:
+                return k
+            else:
+                print("Por favor, elija un valor de k de la lista.")
+        except ValueError:
+            print("Entrada no válida. Intente de nuevo.")
 ###################################################################
 #Funciones principales                                            #
 ###################################################################
@@ -350,23 +400,21 @@ def isinvertible(A, n):
 ########################### Ejercicio 2 ###########################
 #Función powinverse
 def powinverse(A, n):
-    # Asegurarse de que A es una matriz cuadrada
-    if A.shape[0] != A.shape[1]: # Shape devuelve las dimensiones de la matriz
-        raise ValueError("La matriz A debe ser cuadrada.\n")
-    
-    # Crear la matriz identidad
-    I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
-    
+
+    if A.shape[0] != A.shape[1]:
+        raise ValueError("La matriz A debe ser cuadrada.")
+
+    I = np.eye(A.shape[0])  # Matriz identidad
     potencia = I
 
-    # Calcular potencias de A hasta el límite n
-    for p in range(1, n + 1):
-        potencia = np.dot(potencia, A)  # Calcular A^p. dot calcula el producto matricial 
-        if np.allclose(potencia, I): # allclose compara dos matrices
-            return p
-    
-    # Si no se encuentra una p
-    return -1
+    valores_validos = []
+
+    for p in range(1, n):
+        potencia = np.dot(potencia, A)
+        if np.allclose(potencia, I):
+            valores_validos.append(p)
+
+    return valores_validos
 
 ########################### Ejercicio 3 ###########################
 #Función desordenaimagen
@@ -455,16 +503,36 @@ def ordenaimagenite(A, k, imagen, output_path):
 
 ########################### Ejercicio 5 ###########################
 #Función desordenaimagenproceso
-def desordenaimagenproceso(A, k_values, image_path):
-    if not formatoImagen(image_path):
-        print("La imagen debe estar en formato PNG.\n")
-        return
+def desordenaimagenproceso(A, k, image_path,):
+    vector = []
+    vector=powinverse(A,k)
+    if(len(vector)<=5):
+        for i in vector:
+            output_path=f"desordenadak_{i}.png"
+            desordenaimagenite(A,i,image_path,output_path)
+    else:
+        # Si la longitud del vector es mayor o igual a 5, dividir el vector en 5 partes
+        num_parts = 5
+        part_size = len(vector) // num_parts  # Tamaño promedio de cada parte
+        remainder = len(vector) % num_parts  # Número de elementos sobrantes
 
-    # Iterar por cada valor de k y desordenar la imagen
-    for k in k_values:
-        output_path = f"{image_path}desordenada_k{k}.png"  # Crear un nombre de archivo dinámico para cada k
-        print(f"Generando imagen con k={k}, guardando como {output_path}")
-        desordenaimagenite(A, k, image_path, output_path)
+        parts = []
+        start_idx = 0
+
+        # Dividir el vector en 5 partes
+        for i in range(num_parts):
+            # Si hay elementos sobrantes, agregar uno extra a las primeras partes
+            end_idx = start_idx + part_size + (1 if i < remainder else 0)
+            parts.append(vector[start_idx:end_idx])
+            start_idx = end_idx  # Actualizar el índice de inicio para la siguiente parte
+        
+        # Seleccionar el mayor número de cada parte
+        max_numbers = [max(part) for part in parts]
+
+        # Realizar la operación con el número seleccionado
+        for num in max_numbers:
+            output_path=f"desordenadak_{num}.png"
+            desordenaimagenite(A, num, image_path, output_path)
 ############################## Menú ###############################
 def menu():
 
@@ -584,7 +652,7 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 19: 
+        elif op == 10: 
             image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
@@ -603,11 +671,9 @@ def menu():
             if formatoImagen(image_path):
                 # Matriz A y valores de k
                 A = np.array([[1, 5], [2, 3]])
-                k_values = [1,2,4,10]  # Valores de k que quieres usar
-                desordenaimagenproceso(A, k_values, image_path)
-            else:
-                print("La imagen debe estar en formato PNG.\n")
-
+                k=obtener_numero_entero("Introducir valor para k: ")
+                desordenaimagenproceso(A, k, image_path)
+            
 
         elif op == 12:
             print("Saliendo del programa.\n")
