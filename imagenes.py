@@ -8,6 +8,13 @@
 import re
 from PIL import Image
 import numpy as np
+
+#Aclaración: este código funciona solo en formato PNG. Hemos descubierto el fallo, pero por falta de tiempo no hemos podido modificarlo
+#Se debe a que algunas de las funciones están diseñadas específicamente para manejar en formato PNG. 
+#Nosotros usamos: img = Image.open(image_path).convert('L') que es más adecaudo para PNG
+#En lugar de una alternativa más compatible como: img = Image.open(image_path).convert('RGB')
+#Si añadimos la segunda alternativa habría que modificar alguna parte más del código para que funcionase correctamente
+
 ###################################################################
 #Funciones útiles                                                 #
 ###################################################################
@@ -262,9 +269,77 @@ def LSBsimpledecypher(image_path):
 
 ########################### Ejercicio 4 ###########################
 #Función LSBcomplexcypher
+def LSBcomplexcypher(ruta_entrada, message, ruta_salida, s):
+    # Cargar la imagen en modo de escala de grises
+    img = Image.open(ruta_entrada).convert('L')
+    pixels = img.load()
+
+    # Convertir el mensaje a bits (usando las funciones proporcionadas)
+    bits_mensaje = ''.join(texttobit(message)) + '00000000'  # Añadir un terminador nulo
+    longitud_mensaje = len(bits_mensaje)
+
+    # Verificar si la imagen tiene suficientes píxeles para ocultar el mensaje con el salto s
+    anchura, altura = img.size
+    total_pixels = anchura * altura
+    max_longitud_mensaje = total_pixels // s  # Número máximo de bits que se pueden ocultar con el salto s
+    if longitud_mensaje > max_longitud_mensaje:
+        raise ValueError("La imagen es demasiado pequeña para ocultar el mensaje con el salto especificado.")
+
+    # Modificar los píxeles seleccionados con el salto s
+    bit_index = 0
+    for index in range(s - 1, total_pixels, s):  # Salta de s en s píxeles
+        x = index % anchura  # Para calcular las coordenadas x (horizontal)
+        y = index // anchura  # Para calcular las coordenadas y (vertical)
+
+        if bit_index < longitud_mensaje:
+            valor_pixel = pixels[x, y]
+            # Convertir el bit actual del mensaje a entero (0 o 1)
+            bit_actual = int(bits_mensaje[bit_index])
+            # Modificar el LSB del píxel con el bit correspondiente del mensaje
+            if bit_actual == 1:
+                nuevo_valor_pixel = valor_pixel | 1  # Fuerza el LSB a 1
+            else:
+                nuevo_valor_pixel = valor_pixel & 0  # Fuerza el LSB a 0
+            pixels[x, y] = nuevo_valor_pixel  # Actualizar el píxel
+            bit_index += 1
+
+    # Guardar la imagen modificada
+    img.save(ruta_salida)
+    print(f"Mensaje ocultado y guardado en {ruta_salida}")
 
 #Función LSBcomplexdecypher
+def LSBcomplexdecypher(ruta_entrada, s):
+    # Cargar la imagen en escala de grises
+    img = Image.open(ruta_entrada).convert('L')
+    pixels = img.load()
 
+    # Extraer los bits del LSB de los píxeles con el salto s
+    anchura, altura = img.size
+    bits = ''
+    total_pixels = anchura * altura
+    for index in range(s - 1, total_pixels, s):  # Salta de s en s píxeles
+        x = index % anchura  # Para calcular las coordenadas x (horizontal)
+        y = index // anchura  # Para calcular las coordenadas y (vertical)
+        valor_pixel = pixels[x, y]
+        bits += str(valor_pixel & 1)  # Extraer el LSB
+
+    # Convertir los bits en grupos de 8
+    mensaje_bits = []
+    byte = ''  # Variable temporal para almacenar los 8 bits
+    for bit in bits:
+        byte += bit  # Añadir un bit a la variable 'byte'
+        if len(byte) == 8:  # Cuando tengamos 8 bits
+            mensaje_bits.append(byte)  # Añadir el "byte" completo a la lista
+            byte = ''  # Reiniciar la variable 'byte' para el siguiente conjunto de 8 bits
+
+    # Convertir los bytes en texto
+    mensaje = bittotext(mensaje_bits)
+
+    # Detenerse al encontrar el terminador nulo (00000000)
+    if '\x00' in mensaje:
+        mensaje = mensaje.split('\x00')[0]  # Cortar el mensaje donde aparece el terminador
+
+    return mensaje
 
 ##################### Desordenando una imagen #####################
 ########################### Ejercicio 1 ###########################
@@ -291,15 +366,14 @@ def powinverse(A, n):
     I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
     
     potencia = I
-
+    valores_validos = []
     # Calcular potencias de A hasta el límite n
     for p in range(1, n + 1):
         potencia = np.dot(potencia, A)  # Calcular A^p. dot calcula el producto matricial 
         if np.allclose(potencia, I): # allclose compara dos matrices
-            return p
-    
-    # Si no se encuentra una p
-    return -1
+            valores_validos.append(p)
+
+    return valores_validos
 
 ########################### Ejercicio 3 ###########################
 #Función desordenaimagen
@@ -388,6 +462,36 @@ def ordenaimagenite(A, k, imagen, output_path):
 
 ########################### Ejercicio 5 ###########################
 #Función desordenaimagenproceso
+def desordenaimagenproceso(A, k, image_path,):
+    vector = []
+    vector=powinverse(A,k)
+    if(len(vector)<=5):
+        for i in vector:
+            output_path=f"desordenadak_{i}.png"
+            desordenaimagenite(A,i,image_path,output_path)
+    else:
+        # Si la longitud del vector es mayor o igual a 5, dividir el vector en 5 partes
+        num_parts = 5
+        part_size = len(vector) // num_parts  # Tamaño promedio de cada parte
+        remainder = len(vector) % num_parts  # Número de elementos sobrantes
+
+        parts = []
+        start_idx = 0
+
+        # Dividir el vector en 5 partes
+        for i in range(num_parts):
+            # Si hay elementos sobrantes, agregar uno extra a las primeras partes
+            end_idx = start_idx + part_size + (1 if i < remainder else 0)
+            parts.append(vector[start_idx:end_idx])
+            start_idx = end_idx  # Actualizar el índice de inicio para la siguiente parte
+        
+        # Seleccionar el mayor número de cada parte
+        max_numbers = [max(part) for part in parts]
+
+        # Realizar la operación con el número seleccionado
+        for num in max_numbers:
+            output_path=f"desordenadak_{num}.png"
+            desordenaimagenite(A, num, image_path, output_path)
 
 #Función desordenaimagenite
 
@@ -395,58 +499,73 @@ def ordenaimagenite(A, k, imagen, output_path):
 def menu():
 
     while True:
-        print("1. Texto a binario")
-        print("2. Cifrar un texto en una imagen")
-        print("3. Descifrar un texto de una imagen")
-        print("4. Primer invertible en la matriz")
+        print("1. Cifrar un texto en una imagen")
+        print("2. Descifrar un texto de una imagen")
+        print("3. Cifrar un mensaje en una imagen LSB Complex")
+        print("4. Descifrar un mensaje de una imagen LSB Complex")
         print("5. Desordenar imagen")
         print("6. Ordenar imagen")
         print("7. Desordena con k")
         print("8. Ordena con k")
-        print("9. Salir")
+        print("9. Desordena varias k")
+        print("10. Ordenadr varias k")
+        print("11. Salir")
         op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
 
-        if op == 1: 
-            texto=input("Introduce un texto a transformar en binario: ")
-            cadena = texttobit(texto)
-            print(f"La cadena {texto} es: {cadena}\n")
-            print(f"La cadena {bittotext(cadena)}\n")
-
-        elif op== 2:
+        if op== 1:
             image_path = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
-            #if formatoImagen(image_path):
-            message = input("Ingrese el mensaje que desea ocultar: ")
-            output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
-            #if formatoImagen(output_path):
-            try:
-                LSBsimplecypher(image_path, message, output_path)
-            except Exception as e:
-                print(f"Error: {e}")
-            #else: 
-            #        print("Tiene que ser formato png\n")
-            #else: 
-            #    print("Tiene que ser formato png\n")
+            if formatoImagen(image_path):
+                message = input("Ingrese el mensaje que desea ocultar: ")
+                output_path = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
+                if formatoImagen(output_path):
+                    try:
+                        LSBsimplecypher(image_path, message, output_path)
+                    except Exception as e:
+                        print(f"Error: {e}")
+                    else: 
+                        print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
+        
+        elif op == 2:
+            image_path = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
+            if formatoImagen(image_path):
+                try:
+                    mensaje_recuperado = LSBsimpledecypher(image_path)
+                    print(f"Mensaje recuperado: {mensaje_recuperado}")
+                except Exception as e:
+                    print(f"Error: {e}")
+            else: 
+                print("Tiene que ser formato png\n")
         
         elif op == 3:
-            image_path = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
-            #if formatoImagen(image_path):
-            try:
-                mensaje_recuperado = LSBsimpledecypher(image_path)
-                print(f"Mensaje recuperado: {mensaje_recuperado}")
-            except Exception as e:
-                print(f"Error: {e}")
-            #else: 
-            #    print("Tiene que ser formato png\n")
+            ruta_entrada = input("Ingrese el nombre de la imagen de entrada (ej. input.png): ")
+            if formatoImagen(ruta_entrada):
+                message = input("Ingrese el mensaje que desea ocultar: ")
+                ruta_salida = input("Ingrese el nombre de la imagen de salida (ej. output.png): ")
+                if formatoImagen(ruta_salida):
+                    s = obtener_numero_entero("Ingrese el valor de salto (s): ")
+                    try:
+                        LSBcomplexcypher(ruta_entrada, message, ruta_salida, s)
+                    except Exception as e:
+                        print(f"Error: {e}")
+                else: 
+                    print("Tiene que ser formato png\n")
+            else: 
+                print("Tiene que ser formato png\n")
 
         elif op == 4:
-            A =  np.array([[0, 1],[1, 0]])
-            n = obtener_numero_entero("Introduce un valor para n: ")
-            p =powinverse(A, n)
-            if p != -1: 
-                print(f"El primer p es: {p}\n")
+            ruta_entrada = input("Ingrese el nombre de la imagen con el mensaje oculto (ej. output.png): ")
+            if formatoImagen(ruta_entrada):
+                s = obtener_numero_entero("Ingrese el valor de salto (s): ")
+                try:
+                    mensaje_recuperado = LSBcomplexdecypher(ruta_entrada, s)
+                    print(f"Mensaje recuperado: {mensaje_recuperado}")
+                except Exception as e:
+                    print(f"Error: {e}")
             else: 
-                print("No hay p\n")
+                print("Tiene que ser formato png\n")
 
         elif op == 5:
             image_path = input("Ingrese el nombre de la imagen a desordenar (ej. imagen.png): ")
@@ -504,7 +623,20 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 9:
+        elif op == 9: 
+            image_path = input("Ingrese el nombre de la imagen a desordenar segun todas las k (ej. imagen.png): ")
+            if formatoImagen(image_path):
+                # Matriz A y valores de k
+                A = np.array([[1, 5], [2, 3]])
+                k=obtener_numero_entero("Introducir valor para k: ")
+                desordenaimagenproceso(A, k, image_path)
+            else: 
+                print("Tiene que ser formato png\n")
+
+        elif op == 10: 
+            print("esta parte está por hacer, pongo esto para que no de fallo")
+
+        elif op == 11:
             print("Saliendo del programa.\n")
             break
 
@@ -512,3 +644,4 @@ def menu():
             print("Opción no válida. Por favor, elige una opción entre 1 y 5.\n")
 
 menu()
+
