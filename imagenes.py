@@ -5,7 +5,6 @@
 # Rafael Bueno Espinosa                                           #
 # Francisco Bueno Espinosa                                        #
 ###################################################################
-import re
 from PIL import Image
 import numpy as np
 
@@ -366,14 +365,12 @@ def powinverse(A, n):
     I = np.eye(A.shape[0]) # eye crea la matriz idenditidad (si es np.eye(3) crea la matriz idendidad de 3x3)
     
     potencia = I
-    valores_validos = []
+    
     # Calcular potencias de A hasta el límite n
     for p in range(1, n + 1):
         potencia = np.dot(potencia, A)  # Calcular A^p. dot calcula el producto matricial 
         if np.allclose(potencia, I): # allclose compara dos matrices
-            valores_validos.append(p)
-
-    return valores_validos
+            return p
 
 ########################### Ejercicio 3 ###########################
 #Función desordenaimagen
@@ -398,8 +395,7 @@ def desordenaimagen(A, imagen, output_path):
             # Coordenada original
             coord = np.array([i, j])
             # Transformación de coordenadas
-            #nueva_coord = np.dot(A, coord) % fil # dot es el producto matricial
-            nueva_coord = np.rint(np.dot(A, coord) % fil).astype(int)  # Redondear y convertir a entero
+            nueva_coord = np.rint(np.dot(A, coord) % fil).astype(int)  # rint redondea al entero más cercano y astype(int) convertir a entero
             # Asegurarse de que las nuevas coordenadas estén dentro del rango
             x, y = nueva_coord
             if 0 <= x < fil and 0 <= y < col:
@@ -437,7 +433,7 @@ def desordenaimagenite(A, k, imagen, output_path):
             potencia = np.dot(potencia, A)  # Calcular A^k. dot calcula el producto matricial 
 
         desordenaimagen(potencia, imagen, output_path)
-
+    
 #Función ordenaimagenite.
 def ordenaimagenite(A, k, imagen, output_path):
     img = Image.open(imagen) # Abrimos la imagen
@@ -455,45 +451,47 @@ def ordenaimagenite(A, k, imagen, output_path):
         raise ValueError("La matriz A^k no es invertible en mod n")
     
     # Calculamos la inversa de A en mod n, usando funciones que hemos definido en prácticas anteriores
-    A_inv = np.array(InvModMatrix(potencia,n))  # np.array para pasar una lista a un array Numpy
+    A_inv = np.array(InvModMatrix(potencia, n))  # np.array para pasar una lista a un array Numpy
 
     # Una vez calculamos la inversa llamamos la función desordenaimagen, con la inversa de la matriz
     return desordenaimagen(A_inv, imagen, output_path) 
 
 ########################### Ejercicio 5 ###########################
 #Función desordenaimagenproceso
-def desordenaimagenproceso(A, k, image_path,):
+def desordenaimagenproceso(A, k, image_path):
     vector = []
-    vector=powinverse(A,k)
+    for i in range(k):
+        if isinvertible(A, i): 
+            vector.append(i)
+
     if(len(vector)<=5):
         for i in vector:
             output_path=f"desordenadak_{i}.png"
-            desordenaimagenite(A,i,image_path,output_path)
+            desordenaimagenite(A, i, image_path, output_path)
     else:
         # Si la longitud del vector es mayor o igual a 5, dividir el vector en 5 partes
-        num_parts = 5
-        part_size = len(vector) // num_parts  # Tamaño promedio de cada parte
-        remainder = len(vector) % num_parts  # Número de elementos sobrantes
+        num = 5
+        tam = len(vector) // num  # Tamaño promedio de cada parte
+        remainder = len(vector) % num  # Número de elementos sobrantes
 
-        parts = []
-        start_idx = 0
+        partes = []
+        inicio = 0
 
         # Dividir el vector en 5 partes
-        for i in range(num_parts):
+        for i in range(num):
             # Si hay elementos sobrantes, agregar uno extra a las primeras partes
-            end_idx = start_idx + part_size + (1 if i < remainder else 0)
-            parts.append(vector[start_idx:end_idx])
-            start_idx = end_idx  # Actualizar el índice de inicio para la siguiente parte
+            fin = inicio + tam + (1 if i < remainder else 0)
+            if inicio < len(vector):
+                partes.append(vector[inicio:fin]) # Añadir la sublista al vector
+            inicio = fin  # Actualizar el índice de inicio para la siguiente parte
         
         # Seleccionar el mayor número de cada parte
-        max_numbers = [max(part) for part in parts]
+        maximos = [max(part) for part in partes]
 
         # Realizar la operación con el número seleccionado
-        for num in max_numbers:
+        for num in maximos:
             output_path=f"desordenadak_{num}.png"
             desordenaimagenite(A, num, image_path, output_path)
-
-#Función desordenaimagenite
 
 ############################## Menú ###############################
 def menu():
@@ -503,13 +501,12 @@ def menu():
         print("2. Descifrar un texto de una imagen")
         print("3. Cifrar un mensaje en una imagen LSB Complex")
         print("4. Descifrar un mensaje de una imagen LSB Complex")
-        print("5. Desordenar imagen")
-        print("6. Ordenar imagen")
-        print("7. Desordena con k")
-        print("8. Ordena con k")
+        print("5. Primer invertible en la matriz")
+        print("6. Desordenar imagen")
+        print("7. Ordenar imagen")
+        print("8. Desordena y ordena con k")
         print("9. Desordena varias k")
-        print("10. Ordenadr varias k")
-        print("11. Salir")
+        print("10. Salir")
         op = obtener_numero_entero("Elige una de las opciones: ")
         print("\n")
 
@@ -523,8 +520,8 @@ def menu():
                         LSBsimplecypher(image_path, message, output_path)
                     except Exception as e:
                         print(f"Error: {e}")
-                    else: 
-                        print("Tiene que ser formato png\n")
+                else: 
+                    print("Tiene que ser formato png\n")
             else: 
                 print("Tiene que ser formato png\n")
         
@@ -567,7 +564,16 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 5:
+        elif op == 5: 
+            A =  np.array([[0, 1],[1, 0]])
+            n = obtener_numero_entero("Introduce un valor para n: ")
+            p =powinverse(A, n)
+            if p != -1: 
+                print(f"El primer p es: {p}\n")
+            else: 
+                print("No hay p\n")
+
+        elif op == 6:
             image_path = input("Ingrese el nombre de la imagen a desordenar (ej. imagen.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
@@ -580,7 +586,7 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 6: 
+        elif op == 7: 
             image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
@@ -593,33 +599,28 @@ def menu():
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 7: 
+        elif op == 8: 
+            k = 0
+            A = np.array([[1,5], [2,3]])
+
+            #Desordenar la imagen
             image_path = input("Ingrese el nombre de la imagen  a desordenadar (ej. imagen.png): ")
             if formatoImagen(image_path):
                 output_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
                 if formatoImagen(output_path):
-                    #A = np.array([[2,1], [1,1]])
-                    #k = obtener_numero_entero("Introduce un valor para k: ")
-                    k = 10
+                    k = obtener_numero_entero("Introduce un valor para k: ")
                     A = np.array([[1,5], [2,3]])
+                    #A = np.array([[2,1], [1,1]])
                     desordenaimagenite(A, k, image_path, output_path)
                 else: 
                     print("Tiene que ser formato png\n")
             else: 
                 print("Tiene que ser formato png\n")
-
-        elif op == 8: 
-            image_path = input("Ingrese el nombre de la imagen desordenada (ej. desordenada.png): ")
-            if formatoImagen(image_path):
-                output_path = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
-                if formatoImagen(output_path):
-                    #A = np.array([[2,1], [1,1]])
-                    #k = obtener_numero_entero("Introduce un valor para k: ")
-                    k = 10
-                    A = np.array([[1,5], [2,3]])
-                    ordenaimagenite(A, k, image_path, output_path)
-                else: 
-                    print("Tiene que ser formato png\n")
+ 
+            # Ordenar la imagen
+            output_path2 = input("Ingrese el nombre de la imagen ordenada (ej. ordenada.png): ")
+            if formatoImagen(output_path):
+                ordenaimagenite(A, k, output_path, output_path2)
             else: 
                 print("Tiene que ser formato png\n")
 
@@ -627,16 +628,14 @@ def menu():
             image_path = input("Ingrese el nombre de la imagen a desordenar segun todas las k (ej. imagen.png): ")
             if formatoImagen(image_path):
                 # Matriz A y valores de k
-                A = np.array([[1, 5], [2, 3]])
-                k=obtener_numero_entero("Introducir valor para k: ")
+                #A = np.array([[1, 2], [3, 4]])
+                A = np.array([[1,5], [2,3]])
+                k=obtener_numero_entero("Introducir valor para k (la misma que usaste para): ")
                 desordenaimagenproceso(A, k, image_path)
             else: 
                 print("Tiene que ser formato png\n")
 
-        elif op == 10: 
-            print("esta parte está por hacer, pongo esto para que no de fallo")
-
-        elif op == 11:
+        elif op == 10:
             print("Saliendo del programa.\n")
             break
 
